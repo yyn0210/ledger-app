@@ -1,0 +1,13 @@
+:root {
+  --primary-color: #18a058;
+  --success-color: #18a058;
+  --warning-color: #f0a020;
+  --error-color: #d03050;
+  --income-color: #18a058;
+  --expense-color: #d03050;
+  --text-color: #333333;
+  --text-color-secondary: #666666;
+  --border-color: #e0e0e0;
+  --background-color: #f5f7f9;
+  --card-background: #ffffff;
+}

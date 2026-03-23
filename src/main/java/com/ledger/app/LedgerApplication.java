@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * 全平台智能记账应用 - 后端主启动类
  */
 @SpringBootApplication
-@MapperScan("com.ledger.app.modules.*.mapper")
+@MapperScan("com.ledger.app.modules.*.{mapper,repository}")
 public class LedgerApplication {
 
     public static void main(String[] args) {

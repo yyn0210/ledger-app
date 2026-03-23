@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, getUserInfo, logout } from '@/api/auth'
+import { login, register, getUserInfo, logout } from '@/api/auth'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -19,9 +19,19 @@ export const useUserStore = defineStore('user', {
     async login(loginForm) {
       try {
         const res = await login(loginForm)
-        this.token = res.data.token
-        uni.setStorageSync('token', res.data.token)
+        this.token = res.data?.token || res.token
+        uni.setStorageSync('token', this.token)
         await this.getUserInfo()
+        return res
+      } catch (error) {
+        return Promise.reject(error)
+      }
+    },
+    
+    // 注册
+    async register(registerData) {
+      try {
+        const res = await register(registerData)
         return res
       } catch (error) {
         return Promise.reject(error)

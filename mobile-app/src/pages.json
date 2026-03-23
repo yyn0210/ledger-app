@@ -58,6 +58,13 @@
         "navigationBarTitleText": "分类管理",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/account-manage/index",
+      "style": {
+        "navigationBarTitleText": "账户管理",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

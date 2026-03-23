@@ -20,39 +20,9 @@ const mockData = {
 
   // 账本列表
   books: [
-    {
-      id: 1,
-      name: '日常账本',
-      description: '记录日常收支',
-      color: '#3385ff',
-      icon: 'Wallet',
-      memberCount: 1,
-      recordCount: 156,
-      isDefault: true,
-      createdAt: '2026-01-01T00:00:00Z'
-    },
-    {
-      id: 2,
-      name: '旅行账本',
-      description: '记录旅行花费',
-      color: '#52c41a',
-      icon: 'Plane',
-      memberCount: 1,
-      recordCount: 28,
-      isDefault: false,
-      createdAt: '2026-02-01T00:00:00Z'
-    },
-    {
-      id: 3,
-      name: '装修账本',
-      description: '记录装修支出',
-      color: '#ff9900',
-      icon: 'Home',
-      memberCount: 1,
-      recordCount: 45,
-      isDefault: false,
-      createdAt: '2026-03-01T00:00:00Z'
-    }
+    { id: 1, name: '日常账本', description: '记录日常收支', color: '#3385ff', icon: 'Wallet', memberCount: 1, recordCount: 156, isDefault: true },
+    { id: 2, name: '旅行账本', description: '记录旅行花费', color: '#52c41a', icon: 'Plane', memberCount: 1, recordCount: 28, isDefault: false },
+    { id: 3, name: '装修账本', description: '记录装修支出', color: '#ff9900', icon: 'Home', memberCount: 1, recordCount: 45, isDefault: false }
   ],
 
   // 分类列表
@@ -62,16 +32,12 @@ const mockData = {
       { id: 2, name: '交通', type: 'expense', color: '#3385ff', icon: 'Car', sort: 2, isDefault: true },
       { id: 3, name: '购物', type: 'expense', color: '#ff6b6b', icon: 'Cart', sort: 3, isDefault: true },
       { id: 4, name: '娱乐', type: 'expense', color: '#9b59b6', icon: 'Beer', sort: 4, isDefault: true },
-      { id: 5, name: '居住', type: 'expense', color: '#2ecc71', icon: 'Home', sort: 5, isDefault: true },
-      { id: 6, name: '通讯', type: 'expense', color: '#16a085', icon: 'Phone', sort: 6, isDefault: true },
-      { id: 7, name: '医疗', type: 'expense', color: '#e74c3c', icon: 'Medical', sort: 7, isDefault: true },
-      { id: 8, name: '教育', type: 'expense', color: '#3498db', icon: 'School', sort: 8, isDefault: true }
+      { id: 5, name: '居住', type: 'expense', color: '#2ecc71', icon: 'Home', sort: 5, isDefault: true }
     ],
     income: [
       { id: 11, name: '工资', type: 'income', color: '#2ecc71', icon: 'Cash', sort: 1, isDefault: true },
       { id: 12, name: '奖金', type: 'income', color: '#f39c12', icon: 'Gift', sort: 2, isDefault: true },
-      { id: 13, name: '投资', type: 'income', color: '#3498db', icon: 'TrendingUp', sort: 3, isDefault: true },
-      { id: 14, name: '兼职', type: 'income', color: '#9b59b6', icon: 'Briefcase', sort: 4, isDefault: true }
+      { id: 13, name: '投资', type: 'income', color: '#3498db', icon: 'TrendingUp', sort: 3, isDefault: true }
     ]
   },
 
@@ -86,314 +52,72 @@ const mockData = {
 
   // 交易记录
   transactions: [
-    { id: 1, type: 'expense', amount: 68.00, categoryId: 1, categoryName: '餐饮', categoryIcon: 'FastFood', categoryColor: '#ff9900', bookId: 1, bookName: '日常账本', accountId: 3, accountName: '支付宝', date: '2026-03-23', note: '午餐', createdAt: '2026-03-23T12:00:00Z' },
-    { id: 2, type: 'expense', amount: 5.00, categoryId: 2, categoryName: '交通', categoryIcon: 'Car', categoryColor: '#3385ff', bookId: 1, bookName: '日常账本', accountId: 1, accountName: '钱包', date: '2026-03-23', note: '地铁', createdAt: '2026-03-23T08:00:00Z' },
-    { id: 3, type: 'expense', amount: 15.00, categoryId: 1, categoryName: '餐饮', categoryIcon: 'FastFood', categoryColor: '#ff9900', bookId: 1, bookName: '日常账本', accountId: 1, accountName: '钱包', date: '2026-03-23', note: '早餐', createdAt: '2026-03-23T07:30:00Z' },
-    { id: 4, type: 'income', amount: 8500.00, categoryId: 11, categoryName: '工资', categoryIcon: 'Cash', categoryColor: '#2ecc71', bookId: 1, bookName: '日常账本', accountId: 2, accountName: '招商银行储蓄卡', date: '2026-03-01', note: '3 月工资', createdAt: '2026-03-01T00:00:00Z' },
-    { id: 5, type: 'expense', amount: 299.00, categoryId: 3, categoryName: '购物', categoryIcon: 'Cart', categoryColor: '#ff6b6b', bookId: 1, bookName: '日常账本', accountId: 3, accountName: '支付宝', date: '2026-03-22', note: '买衣服', createdAt: '2026-03-22T15:00:00Z' }
+    { id: 1, type: 'expense', amount: 68.00, categoryId: 1, categoryName: '餐饮', bookId: 1, bookName: '日常账本', accountId: 3, accountName: '支付宝', date: '2026-03-23', note: '午餐' },
+    { id: 2, type: 'expense', amount: 5.00, categoryId: 2, categoryName: '交通', bookId: 1, bookName: '日常账本', accountId: 1, accountName: '钱包', date: '2026-03-23', note: '地铁' },
+    { id: 3, type: 'income', amount: 8500.00, categoryId: 11, categoryName: '工资', bookId: 1, bookName: '日常账本', accountId: 2, accountName: '招商银行储蓄卡', date: '2026-03-01', note: '3 月工资' }
   ],
 
   // 统计数据
   stats: {
-    monthly: {
-      totalExpense: 3280.50,
-      totalIncome: 8500.00,
-      balance: 5219.50,
-      dailyExpense: 109.35,
-      dailyIncome: 283.33,
-      balanceRate: 61.4
-    },
+    monthly: { totalExpense: 3280.50, totalIncome: 8500.00, balance: 5219.50, dailyExpense: 109.35, balanceRate: 61.4 },
     category: [
       { categoryId: 1, categoryName: '餐饮', categoryIcon: 'FastFood', categoryColor: '#ff9900', amount: 1280.50, percent: 39.0 },
       { categoryId: 3, categoryName: '购物', categoryIcon: 'Cart', categoryColor: '#ff6b6b', amount: 850.00, percent: 25.9 },
-      { categoryId: 2, categoryName: '交通', categoryIcon: 'Car', categoryColor: '#3385ff', amount: 420.00, percent: 12.8 },
-      { categoryId: 4, categoryName: '娱乐', categoryIcon: 'Beer', categoryColor: '#9b59b6', amount: 380.00, percent: 11.6 },
-      { categoryId: 5, categoryName: '居住', categoryIcon: 'Home', categoryColor: '#2ecc71', amount: 350.00, percent: 10.7 }
-    ],
-    trend: [
-      { date: '2026-03-01', expense: 120, income: 8500 },
-      { date: '2026-03-05', expense: 156, income: 0 },
-      { date: '2026-03-10', expense: 185, income: 0 },
-      { date: '2026-03-15', expense: 220, income: 0 },
-      { date: '2026-03-20', expense: 192, income: 0 },
-      { date: '2026-03-25', expense: 178, income: 0 },
-      { date: '2026-03-30', expense: 132, income: 0 }
+      { categoryId: 2, categoryName: '交通', categoryIcon: 'Car', categoryColor: '#3385ff', amount: 420.00, percent: 12.8 }
     ]
   }
 }
 
 // API Mock 实现
 export const mockApi = {
-  // 用户认证
   auth: {
     login: async (data) => {
       await delay()
       if (data.username && data.password === '123456') {
-        return {
-          code: 200,
-          message: '登录成功',
-          data: {
-            token: 'mock-jwt-token-' + Date.now(),
-            expiresIn: 7200,
-            user: mockData.user
-          }
-        }
+        return { code: 200, message: '登录成功', data: { token: 'mock-jwt-token-' + Date.now(), expiresIn: 7200, user: mockData.user } }
       }
       throw { code: 401, message: '用户名或密码错误' }
     },
-
     register: async (data) => {
       await delay()
-      return {
-        code: 200,
-        message: '注册成功',
-        data: { id: Date.now(), username: data.username }
-      }
+      return { code: 200, message: '注册成功', data: { id: Date.now(), username: data.username } }
     },
-
-    logout: async () => {
-      await delay()
-      return { code: 200, message: '登出成功' }
-    },
-
-    me: async () => {
-      await delay()
-      return { code: 200, data: mockData.user }
-    }
+    logout: async () => { await delay(); return { code: 200, message: '登出成功' } },
+    me: async () => { await delay(); return { code: 200, data: mockData.user } }
   },
 
-  // 账本管理
   books: {
-    list: async (params) => {
-      await delay()
-      return {
-        code: 200,
-        data: {
-          list: mockData.books,
-          total: mockData.books.length,
-          page: params?.page || 1,
-          pageSize: params?.pageSize || 10
-        }
-      }
-    },
-
-    create: async (data) => {
-      await delay()
-      const newBook = {
-        id: Date.now(),
-        ...data,
-        memberCount: 1,
-        recordCount: 0,
-        isDefault: false,
-        createdAt: new Date().toISOString()
-      }
-      mockData.books.push(newBook)
-      return { code: 200, message: '创建成功', data: newBook }
-    },
-
-    update: async (id, data) => {
-      await delay()
-      const index = mockData.books.findIndex(b => b.id === id)
-      if (index > -1) {
-        mockData.books[index] = { ...mockData.books[index], ...data }
-        return { code: 200, message: '更新成功', data: mockData.books[index] }
-      }
-      throw { code: 404, message: '账本不存在' }
-    },
-
-    delete: async (id) => {
-      await delay()
-      const index = mockData.books.findIndex(b => b.id === id)
-      if (index > -1) {
-        if (mockData.books[index].isDefault) {
-          throw { code: 403, message: '默认账本不可删除' }
-        }
-        mockData.books.splice(index, 1)
-        return { code: 200, message: '删除成功' }
-      }
-      throw { code: 404, message: '账本不存在' }
-    }
+    list: async (params) => { await delay(); return { code: 200, data: { list: mockData.books, total: mockData.books.length, page: params?.page || 1, pageSize: params?.pageSize || 10 } } },
+    create: async (data) => { await delay(); const newBook = { id: Date.now(), ...data, memberCount: 1, recordCount: 0, isDefault: false }; mockData.books.push(newBook); return { code: 200, message: '创建成功', data: newBook } },
+    update: async (id, data) => { await delay(); const index = mockData.books.findIndex(b => b.id === id); if (index > -1) { mockData.books[index] = { ...mockData.books[index], ...data }; return { code: 200, message: '更新成功', data: mockData.books[index] } }; throw { code: 404, message: '账本不存在' } },
+    delete: async (id) => { await delay(); const index = mockData.books.findIndex(b => b.id === id); if (index > -1) { if (mockData.books[index].isDefault) throw { code: 403, message: '默认账本不可删除' }; mockData.books.splice(index, 1); return { code: 200, message: '删除成功' } }; throw { code: 404, message: '账本不存在' } }
   },
 
-  // 分类管理
   categories: {
-    list: async (params) => {
-      await delay()
-      const type = params?.type || 'expense'
-      return {
-        code: 200,
-        data: {
-          defaults: mockData.categories[type].filter(c => c.isDefault),
-          customs: mockData.categories[type].filter(c => !c.isDefault)
-        }
-      }
-    },
-
-    create: async (data) => {
-      await delay()
-      const newCategory = {
-        id: Date.now(),
-        ...data,
-        isDefault: false
-      }
-      mockData.categories[data.type].push(newCategory)
-      return { code: 200, message: '创建成功', data: newCategory }
-    },
-
-    update: async (id, data) => {
-      await delay()
-      const type = data.type || 'expense'
-      const index = mockData.categories[type].findIndex(c => c.id === id)
-      if (index > -1) {
-        mockData.categories[type][index] = { ...mockData.categories[type][index], ...data }
-        return { code: 200, message: '更新成功', data: mockData.categories[type][index] }
-      }
-      throw { code: 404, message: '分类不存在' }
-    },
-
-    delete: async (id) => {
-      await delay()
-      const allCategories = [...mockData.categories.expense, ...mockData.categories.income]
-      const category = allCategories.find(c => c.id === id)
-      if (category) {
-        if (category.isDefault) {
-          throw { code: 403, message: '默认分类不可删除' }
-        }
-        const type = category.type
-        const index = mockData.categories[type].findIndex(c => c.id === id)
-        mockData.categories[type].splice(index, 1)
-        return { code: 200, message: '删除成功' }
-      }
-      throw { code: 404, message: '分类不存在' }
-    }
+    list: async (params) => { await delay(); const type = params?.type || 'expense'; return { code: 200, data: { defaults: mockData.categories[type].filter(c => c.isDefault), customs: mockData.categories[type].filter(c => !c.isDefault) } } },
+    create: async (data) => { await delay(); const newCategory = { id: Date.now(), ...data, isDefault: false }; mockData.categories[data.type].push(newCategory); return { code: 200, message: '创建成功', data: newCategory } },
+    update: async (id, data) => { await delay(); const type = data.type || 'expense'; const index = mockData.categories[type].findIndex(c => c.id === id); if (index > -1) { mockData.categories[type][index] = { ...mockData.categories[type][index], ...data }; return { code: 200, message: '更新成功', data: mockData.categories[type][index] } }; throw { code: 404, message: '分类不存在' } },
+    delete: async (id) => { await delay(); const allCategories = [...mockData.categories.expense, ...mockData.categories.income]; const category = allCategories.find(c => c.id === id); if (category) { if (category.isDefault) throw { code: 403, message: '默认分类不可删除' }; const type = category.type; const index = mockData.categories[type].findIndex(c => c.id === id); mockData.categories[type].splice(index, 1); return { code: 200, message: '删除成功' } }; throw { code: 404, message: '分类不存在' } }
   },
 
-  // 账户管理
   accounts: {
-    list: async () => {
-      await delay()
-      return { code: 200, data: mockData.accounts }
-    },
-
-    summary: async () => {
-      await delay()
-      const totalAssets = mockData.accounts.filter(a => a.balance >= 0).reduce((sum, a) => sum + a.balance, 0)
-      const totalDebt = Math.abs(mockData.accounts.filter(a => a.balance < 0).reduce((sum, a) => sum + a.balance, 0))
-      return {
-        code: 200,
-        data: {
-          totalAssets: totalAssets.toFixed(2),
-          totalDebt: totalDebt.toFixed(2),
-          netAssets: (totalAssets - totalDebt).toFixed(2)
-        }
-      }
-    },
-
-    create: async (data) => {
-      await delay()
-      const newAccount = { id: Date.now(), ...data }
-      mockData.accounts.push(newAccount)
-      return { code: 200, message: '创建成功', data: newAccount }
-    },
-
-    update: async (id, data) => {
-      await delay()
-      const index = mockData.accounts.findIndex(a => a.id === id)
-      if (index > -1) {
-        mockData.accounts[index] = { ...mockData.accounts[index], ...data }
-        return { code: 200, message: '更新成功', data: mockData.accounts[index] }
-      }
-      throw { code: 404, message: '账户不存在' }
-    },
-
-    delete: async (id) => {
-      await delay()
-      const index = mockData.accounts.findIndex(a => a.id === id)
-      if (index > -1) {
-        mockData.accounts.splice(index, 1)
-        return { code: 200, message: '删除成功' }
-      }
-      throw { code: 404, message: '账户不存在' }
-    }
+    list: async () => { await delay(); return { code: 200, data: mockData.accounts } },
+    summary: async () => { await delay(); const totalAssets = mockData.accounts.filter(a => a.balance >= 0).reduce((sum, a) => sum + a.balance, 0); const totalDebt = Math.abs(mockData.accounts.filter(a => a.balance < 0).reduce((sum, a) => sum + a.balance, 0)); return { code: 200, data: { totalAssets: totalAssets.toFixed(2), totalDebt: totalDebt.toFixed(2), netAssets: (totalAssets - totalDebt).toFixed(2) } } },
+    create: async (data) => { await delay(); const newAccount = { id: Date.now(), ...data }; mockData.accounts.push(newAccount); return { code: 200, message: '创建成功', data: newAccount } },
+    update: async (id, data) => { await delay(); const index = mockData.accounts.findIndex(a => a.id === id); if (index > -1) { mockData.accounts[index] = { ...mockData.accounts[index], ...data }; return { code: 200, message: '更新成功', data: mockData.accounts[index] } }; throw { code: 404, message: '账户不存在' } },
+    delete: async (id) => { await delay(); const index = mockData.accounts.findIndex(a => a.id === id); if (index > -1) { mockData.accounts.splice(index, 1); return { code: 200, message: '删除成功' } }; throw { code: 404, message: '账户不存在' } }
   },
 
-  // 交易记录
   transactions: {
-    list: async (params) => {
-      await delay()
-      let list = [...mockData.transactions]
-      
-      // 筛选
-      if (params?.bookId) {
-        list = list.filter(t => t.bookId === params.bookId)
-      }
-      if (params?.type) {
-        list = list.filter(t => t.type === params.type)
-      }
-      if (params?.categoryId) {
-        list = list.filter(t => t.categoryId === params.categoryId)
-      }
-      
-      // 分页
-      const page = params?.page || 1
-      const pageSize = params?.pageSize || 20
-      const total = list.length
-      list = list.slice((page - 1) * pageSize, page * pageSize)
-      
-      return {
-        code: 200,
-        data: { list, total, page, pageSize }
-      }
-    },
-
-    create: async (data) => {
-      await delay()
-      const newTransaction = {
-        id: Date.now(),
-        ...data,
-        createdAt: new Date().toISOString()
-      }
-      mockData.transactions.unshift(newTransaction)
-      return { code: 200, message: '记账成功', data: newTransaction }
-    },
-
-    update: async (id, data) => {
-      await delay()
-      const index = mockData.transactions.findIndex(t => t.id === id)
-      if (index > -1) {
-        mockData.transactions[index] = { ...mockData.transactions[index], ...data }
-        return { code: 200, message: '更新成功', data: mockData.transactions[index] }
-      }
-      throw { code: 404, message: '交易记录不存在' }
-    },
-
-    delete: async (id) => {
-      await delay()
-      const index = mockData.transactions.findIndex(t => t.id === id)
-      if (index > -1) {
-        mockData.transactions.splice(index, 1)
-        return { code: 200, message: '删除成功' }
-      }
-      throw { code: 404, message: '交易记录不存在' }
-    }
+    list: async (params) => { await delay(); let list = [...mockData.transactions]; if (params?.bookId) list = list.filter(t => t.bookId === params.bookId); if (params?.type) list = list.filter(t => t.type === params.type); const page = params?.page || 1; const pageSize = params?.pageSize || 20; const total = list.length; list = list.slice((page - 1) * pageSize, page * pageSize); return { code: 200, data: { list, total, page, pageSize } } },
+    create: async (data) => { await delay(); const newTransaction = { id: Date.now(), ...data }; mockData.transactions.unshift(newTransaction); return { code: 200, message: '记账成功', data: newTransaction } },
+    update: async (id, data) => { await delay(); const index = mockData.transactions.findIndex(t => t.id === id); if (index > -1) { mockData.transactions[index] = { ...mockData.transactions[index], ...data }; return { code: 200, message: '更新成功', data: mockData.transactions[index] } }; throw { code: 404, message: '交易记录不存在' } },
+    delete: async (id) => { await delay(); const index = mockData.transactions.findIndex(t => t.id === id); if (index > -1) { mockData.transactions.splice(index, 1); return { code: 200, message: '删除成功' } }; throw { code: 404, message: '交易记录不存在' } }
   },
 
-  // 统计数据
   stats: {
-    monthly: async (params) => {
-      await delay()
-      return { code: 200, data: mockData.stats.monthly }
-    },
-
-    category: async (params) => {
-      await delay()
-      return { code: 200, data: mockData.stats.category }
-    },
-
-    trend: async (params) => {
-      await delay()
-      return { code: 200, data: mockData.stats.trend }
-    }
+    monthly: async (params) => { await delay(); return { code: 200, data: mockData.stats.monthly } },
+    category: async (params) => { await delay(); return { code: 200, data: mockData.stats.category } }
   }
 }
 

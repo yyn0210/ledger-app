@@ -5,7 +5,13 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login/index.vue'),
-    meta: { requiresAuth: false }
+    meta: { requiresAuth: false, title: '登录' }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register/index.vue'),
+    meta: { requiresAuth: false, title: '注册' }
   },
   {
     path: '/',

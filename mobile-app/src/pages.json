@@ -65,6 +65,13 @@
         "navigationBarTitleText": "账户管理",
         "navigationStyle": "custom"
       }
+    },
+    {
+      "path": "pages/settings/index",
+      "style": {
+        "navigationBarTitleText": "设置",
+        "navigationStyle": "custom"
+      }
     }
   ],
   "globalStyle": {

@@ -62,6 +62,12 @@ const routes = [
         meta: { title: '统计分析', icon: 'trending-up' }
       },
       {
+        path: 'ocr',
+        name: 'Ocr',
+        component: () => import('@/views/Ocr/index.vue'),
+        meta: { title: '拍照记账', icon: 'scan' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

@@ -46,6 +46,12 @@ const routes = [
       {
         path: 'transaction',
         name: 'Transaction',
+        component: () => import('@/views/Transaction/index.vue'),
+        meta: { title: '交易记录', icon: 'swap-horizontal' }
+      },
+      {
+        path: 'transaction',
+        name: 'Transaction',
         redirect: '/transaction/list',
         meta: { title: '交易管理', icon: 'swap-horizontal' },
         children: [

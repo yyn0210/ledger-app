@@ -38,8 +38,18 @@ export function deleteTransaction(id) {
 // 获取交易详情
 export function getTransactionDetail(id) {
   if (USE_MOCK) {
-    const transaction = mockApi.transactions.list().then(res => res.data.list.find(t => t.id === id))
+    const transaction = mockApi.transactions.list().then(res => 
+      res.data.list.find(t => t.id === id)
+    )
     return transaction || Promise.reject({ code: 404, message: '交易不存在' })
   }
   return request.get(`/transactions/${id}`)
+}
+
+// 获取交易统计
+export function getTransactionStats(params) {
+  if (USE_MOCK) {
+    return mockApi.transactions.stats(params)
+  }
+  return request.get('/transactions/stats', { params })
 }

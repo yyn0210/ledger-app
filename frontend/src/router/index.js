@@ -86,6 +86,12 @@ const routes = [
         meta: { title: '周期账单', icon: 'repeat' }
       },
       {
+        path: 'budget-manage',
+        name: 'BudgetManage',
+        component: () => import('@/views/BudgetManage/index.vue'),
+        meta: { title: '预算管理', icon: 'wallet' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

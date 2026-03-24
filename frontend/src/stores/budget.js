@@ -3,62 +3,56 @@ import { getBudgetList, createBudget, updateBudget, deleteBudget } from '@/api/b
 
 export const useBudgetStore = defineStore('budget', {
   state: () => ({
-    budgets: [],
+    list: [],
     loading: false,
-    currentMonth: new Date().toISOString().slice(0, 7), // YYYY-MM
-    filter: {
-      type: 'category', // 'category' | 'account'
-      status: 'all' // 'all' | 'active' | 'exceeded'
+    error: null,
+    pagination: {
+      page: 1,
+      pageSize: 20,
+      total: 0
     }
   }),
   getters: {
-    totalBudget: state => {
-      return state.budgets.reduce((sum, b) => sum + (b.amount || 0), 0)
-    },
-    totalUsed: state => {
-      return state.budgets.reduce((sum, b) => sum + (b.used || 0), 0)
-    },
-    exceededBudgets: state => {
-      return state.budgets.filter(b => (b.used || 0) > (b.amount || 0))
-    },
-    activeBudgets: state => {
-      return state.budgets.filter(b => (b.used || 0) < (b.amount || 0))
-    }
+    activeBudgets: state => state.list.filter(b => b.status === 'active'),
+    overspentBudgets: state => state.list.filter(b => b.spent > b.amount),
+    totalBudget: state => state.list.reduce((sum, b) => sum + b.amount, 0),
+    totalSpent: state => state.list.reduce((sum, b) => sum + (b.spent || 0), 0)
   },
   actions: {
-    async fetchBudgets(params = {}) {
+    async fetchList(params = {}) {
       this.loading = true
+      this.error = null
       try {
-        const data = await getBudgetList({ ...this.filter, ...params })
-        this.budgets = data.list || data || []
+        const res = await getBudgetList({ ...this.pagination, ...params })
+        this.list = res.data.list || []
+        this.pagination.total = res.data.total || 0
+        return res.data
       } catch (error) {
-        console.error('获取预算列表失败:', error)
+        this.error = error.message
+        throw error
       } finally {
         this.loading = false
       }
     },
-    async addBudget(budgetData) {
-      const data = await createBudget(budgetData)
-      this.budgets.push(data)
-      return data
+    async create(data) {
+      const res = await createBudget(data)
+      await this.fetchList()
+      return res.data
     },
-    async updateBudgetData(id, updates) {
-      const data = await updateBudget(id, updates)
-      const index = this.budgets.findIndex(b => b.id === id)
-      if (index > -1) {
-        this.budgets[index] = data
-      }
-      return data
+    async update(id, data) {
+      const res = await updateBudget(id, data)
+      await this.fetchList()
+      return res.data
     },
-    async removeBudget(id) {
+    async delete(id) {
       await deleteBudget(id)
-      this.budgets = this.budgets.filter(b => b.id !== id)
+      await this.fetchList()
     },
-    setFilter(filter) {
-      this.filter = { ...this.filter, ...filter }
-    },
-    setMonth(month) {
-      this.currentMonth = month
+    reset() {
+      this.list = []
+      this.loading = false
+      this.error = null
+      this.pagination = { page: 1, pageSize: 20, total: 0 }
     }
   }
 })

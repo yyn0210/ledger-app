@@ -1,49 +1,100 @@
 <template>
-	<view class="container">
+	<view class="home-page">
 		<!-- 顶部状态卡片 -->
 		<view class="status-card">
-			<view class="month-info">
-				<text class="month-label">{{ currentMonth }}</text>
-				<text class="month-year">{{ currentYear }}</text>
+			<!-- 月份切换 -->
+			<view class="month-selector">
+				<u-icon name="arrow-left" size="20" color="#fff" @click="prevMonth"></u-icon>
+				<text class="month-text">{{ currentMonth }} {{ currentYear }}</text>
+				<u-icon name="arrow-right" size="20" color="#fff" @click="nextMonth"></u-icon>
 			</view>
+
+			<!-- 收支概览 -->
 			<view class="summary">
 				<view class="item income">
-					<text class="label">收入</text>
-					<text class="value">¥{{ monthlyIncome }}</text>
+					<view class="item-header">
+						<u-icon name="arrow-up-circle" size="18"></u-icon>
+						<text class="item-label">收入</text>
+					</view>
+					<text class="item-value">¥{{ monthlyIncome }}</text>
 				</view>
+				<view class="divider"></view>
 				<view class="item expense">
-					<text class="label">支出</text>
-					<text class="value">¥{{ monthlyExpense }}</text>
+					<view class="item-header">
+						<u-icon name="arrow-down-circle" size="18"></u-icon>
+						<text class="item-label">支出</text>
+					</view>
+					<text class="item-value">¥{{ monthlyExpense }}</text>
 				</view>
+				<view class="divider"></view>
 				<view class="item balance">
-					<text class="label">结余</text>
-					<text class="value">¥{{ monthlyBalance }}</text>
+					<view class="item-header">
+						<u-icon name="wallet" size="18"></u-icon>
+						<text class="item-label">结余</text>
+					</view>
+					<text class="item-value">¥{{ monthlyBalance }}</text>
 				</view>
+			</view>
+
+			<!-- 预算进度 -->
+			<view class="budget-progress">
+				<view class="budget-header">
+					<text class="budget-label">本月预算</text>
+					<text class="budget-value">¥{{ budgetTotal }} / ¥{{ budgetUsed }}</text>
+				</view>
+				<u-progress
+					:percent="budgetPercent"
+					:stroke-width="6"
+					:active-color="budgetPercent > 90 ? '#EF4444' : budgetPercent > 70 ? '#F59E0B' : '#10B981'"
+				></u-progress>
+				<text class="budget-remaining">剩余 ¥{{ budgetRemaining }}</text>
 			</view>
 		</view>
 
-		<!-- 快速记账按钮 -->
-		<view class="quick-add">
-			<u-button type="primary" size="large" @click="showAddModal = true" :custom-style="{
-				background: 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
-				height: '56px',
-				borderRadius: '12px',
-				fontSize: '18px',
-				fontWeight: '600'
-			}">
-				<u-icon name="plus" size="20"></u-icon>
-				快速记账
-			</u-button>
+		<!-- 快捷功能 -->
+		<view class="quick-actions">
+			<view class="quick-item" @click="goToCreate">
+				<view class="quick-icon add">
+					<u-icon name="edit-pen" size="24" color="#fff"></u-icon>
+				</view>
+				<text class="quick-label">记账</text>
+			</view>
+			<view class="quick-item" @click="goToAccount">
+				<view class="quick-icon account">
+					<u-icon name="wallet" size="24" color="#fff"></u-icon>
+				</view>
+				<text class="quick-label">账户</text>
+			</view>
+			<view class="quick-item" @click="goToCategory">
+				<view class="quick-icon category">
+					<u-icon name="grid" size="24" color="#fff"></u-icon>
+				</view>
+				<text class="quick-label">分类</text>
+			</view>
+			<view class="quick-item" @click="goToBook">
+				<view class="quick-icon book">
+					<u-icon name="book" size="24" color="#fff"></u-icon>
+				</view>
+				<text class="quick-label">账本</text>
+			</view>
 		</view>
 
 		<!-- 最近交易 -->
 		<view class="recent-section">
 			<view class="section-header">
 				<text class="section-title">最近交易</text>
-				<text class="section-more" @click="goToTransactions">查看全部 ></text>
+				<text class="section-more" @click="goToTransactions">
+					查看全部
+					<u-icon name="arrow-right" size="14"></u-icon>
+				</text>
 			</view>
 			<view class="transaction-list">
-				<view class="transaction-item" v-for="(item, index) in recentTransactions" :key="index" @click="goToTransactionDetail(item.id)">
+				<view
+					class="transaction-item"
+					v-for="(item, index) in recentTransactions"
+					:key="index"
+					@click="goToTransactionDetail(item.id)"
+				>
 					<view class="transaction-icon" :style="{ background: item.categoryColor }">
 						<u-icon :name="item.categoryIcon" size="20" color="#fff"></u-icon>
 					</view>
@@ -56,30 +107,14 @@
 					</text>
 				</view>
 			</view>
-		</view>
 
-		<!-- 添加交易弹窗 -->
-		<u-modal v-model="showAddModal" title="快速记账" :show-cancel-button="true" @confirm="handleAddTransaction" @cancel="showAddModal = false">
-			<view class="modal-content">
-				<u-form :model="newTransaction" label-width="80">
-					<u-form-item label="类型" prop="type">
-						<u-radio-group v-model="newTransaction.type">
-							<u-radio name="expense">支出</u-radio>
-							<u-radio name="income">收入</u-radio>
-						</u-radio-group>
-					</u-form-item>
-					<u-form-item label="金额" prop="amount">
-						<u-input v-model="newTransaction.amount" type="number" placeholder="请输入金额"></u-input>
-					</u-form-item>
-					<u-form-item label="分类" prop="category">
-						<u-input v-model="newTransaction.category" placeholder="请输入分类"></u-input>
-					</u-form-item>
-					<u-form-item label="备注" prop="note">
-						<u-input v-model="newTransaction.note" placeholder="请输入备注"></u-input>
-					</u-form-item>
-				</u-form>
-			</view>
-		</u-modal>
+			<!-- 空状态 -->
+			<u-empty
+				v-if="recentTransactions.length === 0"
+				mode="data"
+				text="暂无交易记录"
+			></u-empty>
+		</view>
 	</view>
 </template>
 
@@ -90,138 +125,242 @@ import { onLoad } from '@dcloudio/uni-app';
 export default {
 	data() {
 		return {
-			showAddModal: false,
-			currentMonth: '三月',
-			currentYear: '2026',
+			currentDate: new Date(),
 			monthlyIncome: 0,
 			monthlyExpense: 0,
 			monthlyBalance: 0,
-			recentTransactions: [],
-			newTransaction: {
-				type: 'expense',
-				amount: '',
-				category: '',
-				note: ''
-			}
+			budgetTotal: 10000,
+			budgetUsed: 0,
+			recentTransactions: []
 		};
 	},
+	computed: {
+		currentMonth() {
+			return this.currentDate.getMonth() + 1;
+		},
+		currentYear() {
+			return this.currentDate.getFullYear();
+		},
+		budgetPercent() {
+			if (this.budgetTotal === 0) return 0;
+			return Math.round((this.budgetUsed / this.budgetTotal) * 100);
+		},
+		budgetRemaining() {
+			return this.budgetTotal - this.budgetUsed;
+		}
+	},
 	onLoad() {
-		this.loadMockData();
+		this.loadData();
 	},
 	methods: {
-		loadMockData() {
+		loadData() {
 			// Mock 数据
 			this.monthlyIncome = 15000;
-			this.monthlyExpense = 8500;
+			this.monthlyExpense = 6500;
 			this.monthlyBalance = this.monthlyIncome - this.monthlyExpense;
-			
+			this.budgetUsed = this.monthlyExpense;
+
 			this.recentTransactions = [
-				{ id: 1, name: '午餐', time: '今天 12:30', amount: 35, type: 'expense', categoryColor: '#EF4444', categoryIcon: 'shopping-cart' },
-				{ id: 2, name: '工资', time: '昨天 09:00', amount: 15000, type: 'income', categoryColor: '#10B981', categoryIcon: 'money' },
-				{ id: 3, name: '地铁', time: '昨天 08:30', amount: 6, type: 'expense', categoryColor: '#3B82F6', categoryIcon: 'bus' },
-				{ id: 4, name: '咖啡', time: '03-22 14:00', amount: 28, type: 'expense', categoryColor: '#F59E0B', categoryIcon: 'cup' }
+				{ id: 1, name: '午餐', time: '今天 12:30', amount: 35, type: 'expense', categoryColor: '#EF4444', categoryIcon: 'fastfood' },
+				{ id: 2, name: '地铁', time: '今天 08:30', amount: 6, type: 'expense', categoryColor: '#3B82F6', categoryIcon: 'car' },
+				{ id: 3, name: '工资', time: '昨天 09:00', amount: 15000, type: 'income', categoryColor: '#10B981', categoryIcon: 'cash' },
+				{ id: 4, name: '咖啡', time: '03-22 14:00', amount: 28, type: 'expense', categoryColor: '#F59E0B', categoryIcon: 'beer' },
+				{ id: 5, name: '超市购物', time: '03-21 18:00', amount: 256, type: 'expense', categoryColor: '#8B5CF6', categoryIcon: 'cart' }
 			];
+		},
+		prevMonth() {
+			this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+			this.loadData();
+		},
+		nextMonth() {
+			this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+			this.loadData();
+		},
+		goToCreate() {
+			uni.navigateTo({ url: '/pages/transaction/create' });
+		},
+		goToAccount() {
+			uni.showToast({ title: '账户页面开发中', icon: 'none' });
+		},
+		goToCategory() {
+			uni.showToast({ title: '分类页面开发中', icon: 'none' });
+		},
+		goToBook() {
+			uni.switchTab({ url: '/pages/book/index' });
 		},
 		goToTransactions() {
 			uni.switchTab({ url: '/pages/transaction/index' });
 		},
 		goToTransactionDetail(id) {
 			uni.showToast({ title: '详情页开发中', icon: 'none' });
-		},
-		handleAddTransaction() {
-			if (!this.newTransaction.amount) {
-				uni.showToast({ title: '请输入金额', icon: 'none' });
-				return;
-			}
-			uni.showToast({ title: '记账成功', icon: 'success' });
-			this.showAddModal = false;
-			this.newTransaction = { type: 'expense', amount: '', category: '', note: '' };
-			this.loadMockData();
 		}
 	}
 };
 </script>
 
-<style scoped>
-.container {
-	padding: 16px;
-	padding-bottom: 80px;
-	background: #F5F6F7;
+<style lang="scss" scoped>
+.home-page {
 	min-height: 100vh;
+	background: #F5F6F7;
 }
 
 .status-card {
-	background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
-	border-radius: 16px;
-	padding: 20px 16px;
-	color: #fff;
-	margin-bottom: 16px;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	padding: 0 20px 20px;
+	padding-bottom: 20px;
+}
 
-	.month-info {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		margin-bottom: 16px;
+.month-selector {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 20px 0 16px;
 
-		.month-label {
-			font-size: 18px;
-			font-weight: 600;
-		}
-
-		.month-year {
-			font-size: 14px;
-			opacity: 0.8;
-		}
-	}
-
-	.summary {
-		display: flex;
-		justify-content: space-between;
-
-		.item {
-			display: flex;
-			flex-direction: column;
-			gap: 4px;
-
-			.label {
-				font-size: 12px;
-				opacity: 0.8;
-			}
-
-			.value {
-				font-size: 18px;
-				font-weight: 600;
-			}
-
-			&.income .value {
-				color: #BBF7D0;
-			}
-
-			&.expense .value {
-				color: #FECACA;
-			}
-
-			&.balance .value {
-				color: #fff;
-			}
-		}
+	.month-text {
+		font-size: 18px;
+		font-weight: 600;
+		color: #fff;
 	}
 }
 
-.quick-add {
+.summary {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: rgba(255, 255, 255, 0.15);
+	border-radius: 16px;
+	padding: 20px 16px;
 	margin-bottom: 16px;
+
+	.item {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+
+		.item-header {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 4px;
+
+			.item-label {
+				font-size: 13px;
+				color: rgba(255, 255, 255, 0.8);
+			}
+		}
+
+		.item-value {
+			font-size: 20px;
+			font-weight: 600;
+			color: #fff;
+		}
+
+		&.income .item-value {
+			color: #BBF7D0;
+		}
+
+		&.expense .item-value {
+			color: #FECACA;
+		}
+	}
+
+	.divider {
+		width: 1px;
+		height: 40px;
+		background: rgba(255, 255, 255, 0.3);
+	}
+}
+
+.budget-progress {
+	background: rgba(255, 255, 255, 0.15);
+	border-radius: 12px;
+	padding: 16px;
+
+	.budget-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 12px;
+
+		.budget-label {
+			font-size: 14px;
+			color: rgba(255, 255, 255, 0.8);
+		}
+
+		.budget-value {
+			font-size: 14px;
+			color: #fff;
+			font-weight: 600;
+		}
+	}
+
+	.budget-remaining {
+		display: block;
+		text-align: right;
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.8);
+		margin-top: 8px;
+	}
+}
+
+.quick-actions {
+	display: flex;
+	justify-content: space-around;
+	padding: 20px 16px;
+	background: #fff;
+	margin-bottom: 12px;
+
+	.quick-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+
+		.quick-icon {
+			width: 56px;
+			height: 56px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 16px;
+
+			&.add {
+				background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+			}
+
+			&.account {
+				background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+			}
+
+			&.category {
+				background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+			}
+
+			&.book {
+				background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+			}
+		}
+
+		.quick-label {
+			font-size: 13px;
+			color: #666;
+		}
+	}
 }
 
 .recent-section {
 	background: #fff;
 	border-radius: 12px;
+	margin: 0 16px 16px;
 	padding: 16px;
 
 	.section-header {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 12px;
+		margin-bottom: 16px;
 
 		.section-title {
 			font-size: 16px;
@@ -232,6 +371,9 @@ export default {
 		.section-more {
 			font-size: 13px;
 			color: #9CA3AF;
+			display: flex;
+			align-items: center;
+			gap: 4px;
 		}
 	}
 
@@ -249,15 +391,17 @@ export default {
 			.transaction-icon {
 				width: 40px;
 				height: 40px;
-				border-radius: 10px;
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				border-radius: 10px;
 				margin-right: 12px;
+				flex-shrink: 0;
 			}
 
 			.transaction-info {
 				flex: 1;
+				min-width: 0;
 				display: flex;
 				flex-direction: column;
 				gap: 4px;
@@ -265,6 +409,9 @@ export default {
 				.transaction-name {
 					font-size: 15px;
 					color: #1F2937;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
 				}
 
 				.transaction-time {
@@ -276,6 +423,7 @@ export default {
 			.transaction-amount {
 				font-size: 16px;
 				font-weight: 600;
+				flex-shrink: 0;
 
 				&.income {
 					color: #10B981;
@@ -287,9 +435,5 @@ export default {
 			}
 		}
 	}
-}
-
-.modal-content {
-	padding: 16px 0;
 }
 </style>

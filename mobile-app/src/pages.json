@@ -48,6 +48,13 @@
 			}
 		},
 		{
+			"path": "pages/ocr/scan",
+			"style": {
+				"navigationBarTitleText": "拍照记账",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/transaction/index",
 			"style": {
 				"navigationBarTitleText": "交易"

@@ -38,6 +38,12 @@ const routes = [
         meta: { title: '分类管理', icon: 'apps' }
       },
       {
+        path: 'account',
+        name: 'Account',
+        component: () => import('@/views/Account/index.vue'),
+        meta: { title: '账户管理', icon: 'wallet' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

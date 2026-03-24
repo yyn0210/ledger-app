@@ -92,6 +92,12 @@ const routes = [
         meta: { title: '预算管理', icon: 'wallet' }
       },
       {
+        path: 'export',
+        name: 'Export',
+        component: () => import('@/views/Export/index.vue'),
+        meta: { title: '数据导出', icon: 'download' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

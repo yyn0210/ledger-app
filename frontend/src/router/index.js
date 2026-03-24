@@ -68,6 +68,12 @@ const routes = [
         meta: { title: '拍照记账', icon: 'scan' }
       },
       {
+        path: 'screenshot',
+        name: 'Screenshot',
+        component: () => import('@/views/Screenshot/index.vue'),
+        meta: { title: '截图记账', icon: 'images' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

@@ -56,6 +56,12 @@ const routes = [
         meta: { title: '预算管理', icon: 'pie-chart' }
       },
       {
+        path: 'statistics',
+        name: 'Statistics',
+        component: () => import('@/views/Statistics/index.vue'),
+        meta: { title: '统计分析', icon: 'trending-up' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

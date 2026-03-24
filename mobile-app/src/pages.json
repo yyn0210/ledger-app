@@ -27,6 +27,13 @@
 			}
 		},
 		{
+			"path": "pages/book/list",
+			"style": {
+				"navigationBarTitleText": "账本列表",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/transaction/index",
 			"style": {
 				"navigationBarTitleText": "交易"

@@ -34,6 +34,13 @@
 			}
 		},
 		{
+			"path": "pages/mine/index",
+			"style": {
+				"navigationBarTitleText": "我的",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/transaction/index",
 			"style": {
 				"navigationBarTitleText": "交易"
@@ -46,12 +53,6 @@
 				"navigationStyle": "custom"
 			}
 		},
-		{
-			"path": "pages/mine/index",
-			"style": {
-				"navigationBarTitleText": "我的"
-			}
-		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

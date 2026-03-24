@@ -76,6 +76,13 @@
 			}
 		},
 		{
+			"path": "pages/budget/list",
+			"style": {
+				"navigationBarTitleText": "预算管理",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/transaction/index",
 			"style": {
 				"navigationBarTitleText": "交易"

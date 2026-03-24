@@ -109,30 +109,6 @@ CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON transactions(transaction_date);
 CREATE INDEX IF NOT EXISTS idx_budgets_user_id ON budgets(user_id);
 
--- 插入预置分类（book_id=0 表示全局预置）
--- 支出分类 (type=1)
-INSERT INTO categories (id, book_id, parent_id, name, icon, type, sort_order, is_preset) VALUES
-(1, 0, 0, '餐饮', '🍕', 1, 1, 1),
-(2, 0, 0, '交通', '🚗', 1, 2, 1),
-(3, 0, 0, '购物', '🛍️', 1, 3, 1),
-(4, 0, 0, '娱乐', '🎬', 1, 4, 1),
-(5, 0, 0, '居住', '🏠', 1, 5, 1),
-(6, 0, 0, '医疗', '🏥', 1, 6, 1),
-(7, 0, 0, '教育', '📚', 1, 7, 1),
-(8, 0, 0, '通讯', '📱', 1, 8, 1),
-(9, 0, 0, '人情', '🧧', 1, 9, 1),
-(10, 0, 0, '其他', '📦', 1, 10, 1)
-ON CONFLICT (id) DO NOTHING;
-
--- 收入分类 (type=2)
-INSERT INTO categories (id, book_id, parent_id, name, icon, type, sort_order, is_preset) VALUES
-(11, 0, 0, '工资', '💰', 2, 1, 1),
-(12, 0, 0, '奖金', '🎁', 2, 2, 1),
-(13, 0, 0, '理财', '📈', 2, 3, 1),
-(14, 0, 0, '兼职', '💼', 2, 4, 1),
-(15, 0, 0, '其他', '📦', 2, 5, 1)
-ON CONFLICT (id) DO NOTHING;
-
 -- 插入默认数据（可选）
 -- INSERT INTO users (id, username, email, password_hash, nickname) VALUES 
 -- (1, 'admin', 'admin@example.com', '$2a$10$...', '管理员');

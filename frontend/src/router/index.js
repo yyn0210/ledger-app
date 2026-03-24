@@ -80,6 +80,12 @@ const routes = [
         meta: { title: '语音记账', icon: 'mic' }
       },
       {
+        path: 'recurring',
+        name: 'Recurring',
+        component: () => import('@/views/Recurring/index.vue'),
+        meta: { title: '周期账单', icon: 'repeat' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

@@ -83,6 +83,13 @@
 			}
 		},
 		{
+			"path": "pages/offline/list",
+			"style": {
+				"navigationBarTitleText": "离线记账",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/transaction/index",
 			"style": {
 				"navigationBarTitleText": "交易"

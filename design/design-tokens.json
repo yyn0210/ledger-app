@@ -1,0 +1,331 @@
+{
+  "color": {
+    "brand-primary": {
+      "value": "#18A058",
+      "type": "color",
+      "description": "主色调，按钮、链接、成功状态"
+    },
+    "brand-primary-hover": {
+      "value": "#169252",
+      "type": "color",
+      "description": "悬停状态"
+    },
+    "brand-primary-active": {
+      "value": "#14844A",
+      "type": "color",
+      "description": "按下状态"
+    },
+    "brand-primary-light": {
+      "value": "#E8F7F0",
+      "type": "color",
+      "description": "浅色背景"
+    },
+    "functional-success": {
+      "value": "#18A058",
+      "type": "color",
+      "description": "收入、成功提示"
+    },
+    "functional-warning": {
+      "value": "#F0A020",
+      "type": "color",
+      "description": "警告、预算预警"
+    },
+    "functional-error": {
+      "value": "#D03050",
+      "type": "color",
+      "description": "支出、错误提示"
+    },
+    "functional-info": {
+      "value": "#2080F0",
+      "type": "color",
+      "description": "信息提示、链接"
+    },
+    "neutral-text-primary": {
+      "value": "#1F2329",
+      "type": "color",
+      "description": "主标题、正文"
+    },
+    "neutral-text-secondary": {
+      "value": "#4E5969",
+      "type": "color",
+      "description": "副标题、说明文字"
+    },
+    "neutral-text-tertiary": {
+      "value": "#86909C",
+      "type": "color",
+      "description": "辅助信息、占位符"
+    },
+    "neutral-border": {
+      "value": "#DEE0E3",
+      "type": "color",
+      "description": "边框、分割线"
+    },
+    "neutral-background": {
+      "value": "#F5F7F9",
+      "type": "color",
+      "description": "页面背景"
+    },
+    "neutral-surface": {
+      "value": "#FFFFFF",
+      "type": "color",
+      "description": "卡片、弹窗背景"
+    },
+    "income_expense-income": {
+      "value": "#18A058",
+      "type": "color",
+      "description": "收入金额显示"
+    },
+    "income_expense-expense": {
+      "value": "#D03050",
+      "type": "color",
+      "description": "支出金额显示"
+    }
+  },
+  "typography": {
+    "headings-h1": {
+      "fontSize": {
+        "value": "32px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "40px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Bold",
+        "type": "fontWeight"
+      }
+    },
+    "headings-h2": {
+      "fontSize": {
+        "value": "24px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "32px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "SemiBold",
+        "type": "fontWeight"
+      }
+    },
+    "headings-h3": {
+      "fontSize": {
+        "value": "20px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "28px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "SemiBold",
+        "type": "fontWeight"
+      }
+    },
+    "headings-h4": {
+      "fontSize": {
+        "value": "18px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "26px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Medium",
+        "type": "fontWeight"
+      }
+    },
+    "body-body-large": {
+      "fontSize": {
+        "value": "16px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "24px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Regular",
+        "type": "fontWeight"
+      }
+    },
+    "body-body": {
+      "fontSize": {
+        "value": "14px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "22px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Regular",
+        "type": "fontWeight"
+      }
+    },
+    "body-body-small": {
+      "fontSize": {
+        "value": "13px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "20px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Regular",
+        "type": "fontWeight"
+      }
+    },
+    "body-caption": {
+      "fontSize": {
+        "value": "12px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "18px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Regular",
+        "type": "fontWeight"
+      }
+    },
+    "numbers-amount-large": {
+      "fontSize": {
+        "value": "28px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "36px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Bold",
+        "type": "fontWeight"
+      }
+    },
+    "numbers-amount": {
+      "fontSize": {
+        "value": "20px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "28px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Medium",
+        "type": "fontWeight"
+      }
+    },
+    "numbers-amount-small": {
+      "fontSize": {
+        "value": "16px",
+        "type": "fontSize"
+      },
+      "lineHeight": {
+        "value": "24px",
+        "type": "lineHeight"
+      },
+      "fontWeight": {
+        "value": "Regular",
+        "type": "fontWeight"
+      }
+    }
+  },
+  "spacing": {
+    "xs": {
+      "value": "4px",
+      "type": "spacing",
+      "description": "极小间距"
+    },
+    "s": {
+      "value": "8px",
+      "type": "spacing",
+      "description": "小间距"
+    },
+    "m": {
+      "value": "12px",
+      "type": "spacing",
+      "description": "中间距"
+    },
+    "l": {
+      "value": "16px",
+      "type": "spacing",
+      "description": "大间距"
+    },
+    "xl": {
+      "value": "24px",
+      "type": "spacing",
+      "description": "超大间距"
+    },
+    "2xl": {
+      "value": "32px",
+      "type": "spacing",
+      "description": "极大间距"
+    },
+    "3xl": {
+      "value": "48px",
+      "type": "spacing",
+      "description": "页面边距"
+    }
+  },
+  "radius": {
+    "none": {
+      "value": "0px",
+      "type": "borderRadius",
+      "description": "无圆角"
+    },
+    "small": {
+      "value": "4px",
+      "type": "borderRadius",
+      "description": "小按钮、标签"
+    },
+    "medium": {
+      "value": "8px",
+      "type": "borderRadius",
+      "description": "按钮、输入框、卡片"
+    },
+    "large": {
+      "value": "12px",
+      "type": "borderRadius",
+      "description": "大卡片、弹窗"
+    },
+    "xl": {
+      "value": "16px",
+      "type": "borderRadius",
+      "description": "模态框"
+    },
+    "full": {
+      "value": "9999px",
+      "type": "borderRadius",
+      "description": "圆形头像、徽章"
+    }
+  },
+  "shadow": {
+    "shadow s": {
+      "value": "0 1px 2px rgba(0,0,0,0.05)",
+      "type": "boxShadow",
+      "description": "小按钮、徽章"
+    },
+    "shadow m": {
+      "value": "0 2px 8px rgba(0,0,0,0.08)",
+      "type": "boxShadow",
+      "description": "卡片、下拉菜单"
+    },
+    "shadow l": {
+      "value": "0 4px 16px rgba(0,0,0,0.12)",
+      "type": "boxShadow",
+      "description": "弹窗、模态框"
+    },
+    "shadow xl": {
+      "value": "0 8px 32px rgba(0,0,0,0.16)",
+      "type": "boxShadow",
+      "description": "悬浮元素"
+    }
+  }
+}

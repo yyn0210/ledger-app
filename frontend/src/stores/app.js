@@ -15,6 +15,15 @@ export const useAppStore = defineStore('app', {
     },
     setSidebarCollapsed(collapsed) {
       this.sidebarCollapsed = collapsed
+<<<<<<< HEAD
+=======
+    },
+    setTheme(theme) {
+      this.theme = theme
+    },
+    setLoading(loading) {
+      this.loading = loading
+>>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
     }
   }
 })

@@ -2,12 +2,31 @@
 export default {
 	onLaunch: function() {
 		console.log('App Launch - 简洛账本');
+		// 检查登录状态
+		this.checkLogin();
 	},
 	onShow: function() {
 		console.log('App Show');
+		this.checkLogin();
 	},
 	onHide: function() {
 		console.log('App Hide');
+	},
+	methods: {
+		checkLogin() {
+			const token = uni.getStorageSync('token');
+			const currentPage = getCurrentPages();
+			const currentPath = currentPage.length > 0 ? currentPage[currentPage.length - 1].route : '';
+			
+			// 登录页面和注册页面不需要检查
+			const publicPages = ['pages/login/login', 'pages/register/register'];
+			if (publicPages.includes(currentPath)) return;
+			
+			// 如果没有 token，跳转到登录页
+			if (!token) {
+				uni.reLaunch({ url: '/pages/login/login' });
+			}
+		}
 	}
 };
 </script>

@@ -1,25 +1,4 @@
 import request from './request'
-<<<<<<< HEAD
-
-export function getBookList(params) {
-  return request({ url: '/books', method: 'get', params })
-}
-
-export function createBook(data) {
-  return request({ url: '/books', method: 'post', data })
-}
-
-export function getBookDetail(id) {
-  return request({ url: `/books/${id}`, method: 'get' })
-}
-
-export function updateBook(id, data) {
-  return request({ url: `/books/${id}`, method: 'put', data })
-}
-
-export function deleteBook(id) {
-  return request({ url: `/books/${id}`, method: 'delete' })
-=======
 import { mockApi } from '@/mock'
 
 const USE_MOCK = true
@@ -71,5 +50,4 @@ export function getBookDetail(id) {
     return book || Promise.reject({ code: 404, message: '账本不存在' })
   }
   return request.get(`/books/${id}`)
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
 }

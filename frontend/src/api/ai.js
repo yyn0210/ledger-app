@@ -1,41 +1,16 @@
 import request from './request'
 
-<<<<<<< HEAD
-export function aiClassify(data) {
-  return request({ url: '/ai/classify', method: 'post', data })
-}
-
-export function aiAnalyze(params) {
-  return request({ url: '/ai/analyze', method: 'get', params })
-}
-
-export function aiBudgetSuggestion(params) {
-  return request({ url: '/ai/budget-suggestion', method: 'get', params })
-=======
-// AI 智能分类
-export function aiClassify(data) {
-  return request({
-    url: '/ai/classify',
-    method: 'post',
-    data
-  })
-}
-
 // AI 智能分析
-export function aiAnalyze(params) {
-  return request({
-    url: '/ai/analyze',
-    method: 'get',
-    params
-  })
+export function analyzeTransactions(params) {
+  return request.get('/ai/analyze', { params })
 }
 
 // AI 预算建议
-export function aiBudgetSuggestion(params) {
-  return request({
-    url: '/ai/budget-suggestion',
-    method: 'get',
-    params
-  })
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
+export function getBudgetSuggestions() {
+  return request.get('/ai/budget/suggestions')
+}
+
+// AI 消费洞察
+export function getSpendingInsights() {
+  return request.get('/ai/insights')
 }

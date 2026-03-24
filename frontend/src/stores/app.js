@@ -3,27 +3,26 @@ import { defineStore } from 'pinia'
 export const useAppStore = defineStore('app', {
   state: () => ({
     sidebarCollapsed: false,
-    theme: 'light',
-    loading: false
+    loading: false,
+    theme: 'light'
   }),
-  getters: {
-    sidebarWidth: state => (state.sidebarCollapsed ? 64 : 240)
-  },
   actions: {
-    toggleSidebar() {
-      this.sidebarCollapsed = !this.sidebarCollapsed
-    },
     setSidebarCollapsed(collapsed) {
       this.sidebarCollapsed = collapsed
-<<<<<<< HEAD
-=======
-    },
-    setTheme(theme) {
-      this.theme = theme
+      localStorage.setItem('sidebarCollapsed', collapsed)
     },
     setLoading(loading) {
       this.loading = loading
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
+    },
+    setTheme(theme) {
+      this.theme = theme
+      localStorage.setItem('theme', theme)
+    },
+    init() {
+      const collapsed = localStorage.getItem('sidebarCollapsed')
+      if (collapsed) {
+        this.sidebarCollapsed = collapsed === 'true'
+      }
     }
   }
 })

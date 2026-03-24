@@ -9,12 +9,6 @@
       @collapse="appStore.setSidebarCollapsed(true)"
       @expand="appStore.setSidebarCollapsed(false)"
     >
-<<<<<<< HEAD
-      <div class="logo">{{ appStore.sidebarCollapsed ? '记账' : '智能记账' }}</div>
-      <n-menu
-        :options="menuOptions"
-        :collapsed="appStore.sidebarCollapsed"
-=======
       <div class="logo">
         <span v-if="!appStore.sidebarCollapsed">智能记账</span>
         <span v-else>记账</span>
@@ -24,7 +18,6 @@
         :collapsed="appStore.sidebarCollapsed"
         :collapsed-width="64"
         :collapsed-icon-size="22"
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
         :default-value="route.name"
       />
     </n-layout-sider>
@@ -32,26 +25,18 @@
       <n-layout-header bordered class="header">
         <div class="header-left">
           <n-icon size="20" style="cursor: pointer" @click="toggleSidebar">
-<<<<<<< HEAD
             <MenuOutline />
-=======
-            <MenuOutlined />
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
           </n-icon>
         </div>
         <div class="header-right">
           <n-dropdown :options="userMenuOptions" @select="handleUserMenu">
             <div class="user-info">
-<<<<<<< HEAD
-              <n-avatar :size="32" round>👤</n-avatar>
-=======
               <n-avatar :size="32" round>
                 <template #icon>
-                  <PersonOutlined />
+                  <PersonOutline />
                 </template>
               </n-avatar>
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
-              <span class="username">{{ userStore.nickname }}</span>
+              <span v-if="!appStore.sidebarCollapsed" class="username">{{ userStore.user?.nickname || '用户' }}</span>
             </div>
           </n-dropdown>
         </div>
@@ -64,146 +49,56 @@
 </template>
 
 <script setup>
-import { computed, h } from 'vue'
+import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
-<<<<<<< HEAD
-import { MenuOutline } from '@vicons/ionicons5'
-=======
-import { MenuOutlined, PersonOutlined } from '@vicons/antd'
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
-import { NIcon } from 'naive-ui'
+import { MenuOutline, PersonOutline } from '@vicons/ionicons5'
 
 const router = useRouter()
 const route = useRoute()
 const appStore = useAppStore()
 const userStore = useUserStore()
 
-<<<<<<< HEAD
-const renderIcon = icon => () => h(NIcon, null, { default: () => h(icon) })
+const toggleSidebar = () => {
+  appStore.setSidebarCollapsed(!appStore.sidebarCollapsed)
+}
 
 const menuOptions = computed(() => [
-  { label: '仪表盘', key: 'Dashboard', icon: renderIcon(MenuOutlined), onClick: () => router.push('/dashboard') },
-  { label: '交易管理', key: 'Transaction', icon: renderIcon(MenuOutlined), onClick: () => router.push('/transaction') },
-  { label: '账本管理', key: 'Book', icon: renderIcon(MenuOutlined), onClick: () => router.push('/book') },
-  { label: '统计分析', key: 'Statistics', icon: renderIcon(MenuOutlined), onClick: () => router.push('/statistics') },
-  { label: '设置', key: 'Settings', icon: renderIcon(MenuOutlined), onClick: () => router.push('/settings') }
+  { label: '仪表盘', key: 'Dashboard', icon: () => '📊' },
+  { label: '账本管理', key: 'Book', icon: () => '📒' },
+  { label: '交易管理', key: 'Transaction', icon: () => '💰' },
+  { label: '统计分析', key: 'Statistics', icon: () => '📈' },
+  { label: '设置', key: 'Settings', icon: () => '⚙️' }
 ])
 
 const userMenuOptions = computed(() => [
-  { label: '个人设置', key: 'profile' },
+  { label: '个人中心', key: 'profile' },
+  { label: '设置', key: 'settings' },
   { label: '退出登录', key: 'logout' }
 ])
 
-const toggleSidebar = () => appStore.toggleSidebar()
-=======
-const renderIcon = icon => {
-  return () => h(NIcon, null, { default: () => h(icon) })
-}
-
-const menuOptions = computed(() => [
-  {
-    label: '仪表盘',
-    key: 'Dashboard',
-    icon: renderIcon(MenuOutlined),
-    onClick: () => router.push('/dashboard')
-  },
-  {
-    label: '交易管理',
-    key: 'Transaction',
-    icon: renderIcon(MenuOutlined),
-    children: [
-      {
-        label: '交易列表',
-        key: 'TransactionList',
-        onClick: () => router.push('/transaction/list')
-      },
-      {
-        label: '新建交易',
-        key: 'TransactionCreate',
-        onClick: () => router.push('/transaction/create')
-      }
-    ]
-  },
-  {
-    label: '账本管理',
-    key: 'Book',
-    icon: renderIcon(MenuOutlined),
-    onClick: () => router.push('/book')
-  },
-  {
-    label: '统计分析',
-    key: 'Statistics',
-    icon: renderIcon(MenuOutlined),
-    onClick: () => router.push('/statistics')
-  },
-  {
-    label: '设置',
-    key: 'Settings',
-    icon: renderIcon(MenuOutlined),
-    onClick: () => router.push('/settings')
-  }
-])
-
-const userMenuOptions = computed(() => [
-  {
-    label: '个人设置',
-    key: 'profile'
-  },
-  {
-    label: '退出登录',
-    key: 'logout'
-  }
-])
-
-const toggleSidebar = () => {
-  appStore.toggleSidebar()
-}
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
-
-const handleUserMenu = key => {
+const handleUserMenu = (key) => {
   if (key === 'logout') {
-    userStore.logout()
+    localStorage.removeItem('token')
     router.push('/login')
-<<<<<<< HEAD
-=======
-  } else if (key === 'profile') {
+  } else if (key === 'settings') {
     router.push('/settings')
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
   }
 }
 </script>
 
 <style scoped>
-<<<<<<< HEAD
-.layout { height: 100vh; }
-.logo {
-  display: flex; justify-content: center; align-items: center;
-  height: 64px; font-size: 18px; font-weight: bold;
-  color: var(--primary-color); border-bottom: 1px solid var(--border-color);
-}
-.header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0 20px; height: 64px;
-}
-.header-right { display: flex; align-items: center; }
-.user-info { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.content { padding: 20px; background-color: #f5f7f9; }
-=======
 .layout {
   height: 100vh;
 }
 
 .logo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 64px;
+  padding: 20px 16px;
   font-size: 18px;
-  font-weight: bold;
-  color: var(--primary-color);
-  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  color: #3385ff;
+  text-align: center;
 }
 
 .header {
@@ -222,22 +117,23 @@ const handleUserMenu = key => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
 }
 
 .username {
   font-size: 14px;
+  color: #333;
 }
 
 .content {
   padding: 20px;
-  background-color: #f5f7f9;
+  background: #f5f6f7;
 }
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
 </style>

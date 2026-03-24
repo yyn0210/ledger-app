@@ -44,7 +44,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMessage } from 'naive-ui'
-import { AddCircle, FastFood, Car, Cart, Cash, ellipsisHorizontal } from '@vicons/ionicons5'
+import { AddCircle, FastFood, Car, Cart, Cash } from '@vicons/ionicons5'
 import TransactionForm from '@/components/TransactionForm/index.vue'
 import { getBookList } from '@/api/book'
 import { createTransaction, getTransactionList } from '@/api/transaction'

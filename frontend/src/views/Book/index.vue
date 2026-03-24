@@ -1,26 +1,8 @@
 <template>
   <div class="book-management">
-<<<<<<< HEAD
-    <n-card>
-      <n-space justify="space-between">
-        <span>账本列表</span>
-        <n-button type="primary">新建账本</n-button>
-      </n-space>
-    </n-card>
-    <n-card>
-      <n-grid :cols="3" :x-gap="20" :y-gap="20">
-        <n-grid-item v-for="book in bookList" :key="book.id">
-          <n-card :title="book.name" hoverable>
-            <p>创建时间：{{ book.createdAt }}</p>
-            <p>交易数：{{ book.transactionCount || 0 }}</p>
-          </n-card>
-        </n-grid-item>
-      </n-grid>
-    </n-card>
-=======
     <div class="page-header">
       <h1 class="page-title">
-        <n-icon :component="Book" size="28" color="#3385ff" />
+        <n-icon :component="BookOutline" size="28" color="#3385ff" />
         账本管理
       </h1>
       <n-button type="primary" @click="showCreateModal = true">
@@ -44,7 +26,7 @@
             <template #header>
               <div class="book-header">
                 <div class="book-icon" :style="{ backgroundColor: book.color }">
-                  <n-icon :component="book.icon || Book" size="28" color="#fff" />
+                  <n-icon :component="book.icon || BookOutline" size="28" color="#fff" />
                 </div>
                 <div class="book-actions">
                   <n-button quaternary circle @click.stop="editBook(book)">
@@ -169,30 +151,16 @@
         </n-button>
       </template>
     </n-modal>
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
   </div>
 </template>
 
 <script setup>
-<<<<<<< HEAD
-import { ref } from 'vue'
-
-const bookList = ref([
-  { id: 1, name: '日常账本', createdAt: '2026-03-01', transactionCount: 156 },
-  { id: 2, name: '旅行账本', createdAt: '2026-02-15', transactionCount: 45 },
-  { id: 3, name: '装修账本', createdAt: '2026-01-10', transactionCount: 89 }
-])
-</script>
-
-<style scoped>
-.book-management { display: flex; flex-direction: column; gap: 20px; }
-=======
 import { ref, reactive, onMounted } from 'vue'
 import { useMessage, useDialog } from 'naive-ui'
 import {
-  Book, AddCircle, Create, Trash, People, DocumentText,
-  FastFood, Car, Cart, Home, Wallet, Business, Beer,
-  Heart, School, Gamepad, Plane, Shirt, Pet
+  BookOutline, AddCircleOutline, CreateOutline, TrashOutline, PeopleOutline, DocumentTextOutline,
+  FastFoodOutline, CarOutline, CartOutline, HomeOutline, WalletOutline, BusinessOutline, BeerOutline,
+  HeartOutline, SchoolOutline, GameControllerOutline, AirplaneOutline, ShirtOutline
 } from '@vicons/ionicons5'
 import { getBookList, createBook, updateBook, deleteBook } from '@/api/book'
 import { useBookStore } from '@/stores/book'
@@ -214,20 +182,19 @@ const colors = [
 ]
 
 const icons = [
-  { value: 'Book', component: Book },
-  { value: 'Wallet', component: Wallet },
-  { value: 'FastFood', component: FastFood },
-  { value: 'Car', component: Car },
-  { value: 'Cart', component: Cart },
-  { value: 'Home', component: Home },
-  { value: 'Business', component: Business },
-  { value: 'Beer', component: Beer },
-  { value: 'Heart', component: Heart },
-  { value: 'School', component: School },
-  { value: 'Gamepad', component: Gamepad },
-  { value: 'Plane', component: Plane },
-  { value: 'Shirt', component: Shirt },
-  { value: 'Pet', component: Pet }
+  { value: 'BookOutline', component: BookOutline },
+  { value: 'WalletOutline', component: WalletOutline },
+  { value: 'FastFoodOutline', component: FastFoodOutline },
+  { value: 'CarOutline', component: CarOutline },
+  { value: 'CartOutline', component: CartOutline },
+  { value: 'HomeOutline', component: HomeOutline },
+  { value: 'BusinessOutline', component: BusinessOutline },
+  { value: 'BeerOutline', component: BeerOutline },
+  { value: 'HeartOutline', component: HeartOutline },
+  { value: 'SchoolOutline', component: SchoolOutline },
+  { value: 'GameControllerOutline', component: GameControllerOutline },
+  { value: 'AirplaneOutline', component: AirplaneOutline },
+  { value: 'ShirtOutline', component: ShirtOutline }
 ]
 
 const formData = reactive({
@@ -264,22 +231,21 @@ const loadBookList = async () => {
 
 const getIconComponent = (iconName) => {
   const iconMap = {
-    'Book': Book,
-    'Wallet': Wallet,
-    'FastFood': FastFood,
-    'Car': Car,
-    'Cart': Cart,
-    'Home': Home,
-    'Business': Business,
-    'Beer': Beer,
-    'Heart': Heart,
-    'School': School,
-    'Gamepad': Gamepad,
-    'Plane': Plane,
-    'Shirt': Shirt,
-    'Pet': Pet
+    'BookOutline': BookOutline,
+    'WalletOutline': WalletOutline,
+    'FastFoodOutline': FastFoodOutline,
+    'CarOutline': CarOutline,
+    'CartOutline': CartOutline,
+    'HomeOutline': HomeOutline,
+    'BusinessOutline': BusinessOutline,
+    'BeerOutline': BeerOutline,
+    'HeartOutline': HeartOutline,
+    'SchoolOutline': SchoolOutline,
+    'GameControllerOutline': GameControllerOutline,
+    'AirplaneOutline': AirplaneOutline,
+    'ShirtOutline': ShirtOutline
   }
-  return iconMap[iconName] || Book
+  return iconMap[iconName] || BookOutline
 }
 
 const switchBook = (book) => {
@@ -528,5 +494,4 @@ const formatDate = (dateStr) => {
   padding: 12px 20px;
   border-top: 1px solid #f0f0f0;
 }
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
 </style>

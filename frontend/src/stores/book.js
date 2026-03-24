@@ -5,10 +5,7 @@ export const useBookStore = defineStore('book', {
   state: () => ({
     bookList: [],
     currentBook: null,
-<<<<<<< HEAD
-=======
     currentBookId: localStorage.getItem('currentBookId') || null,
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
     loading: false
   }),
   getters: {
@@ -20,14 +17,11 @@ export const useBookStore = defineStore('book', {
       try {
         const data = await getBookList(params)
         this.bookList = data.list || data
-<<<<<<< HEAD
-=======
         // 如果没有当前账本，设置第一个为当前账本
         if (!this.currentBookId && this.bookList.length > 0) {
           this.currentBookId = this.bookList[0].id
           localStorage.setItem('currentBookId', this.currentBookId)
         }
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
       } catch (error) {
         console.error('获取账本列表失败:', error)
       } finally {
@@ -44,8 +38,6 @@ export const useBookStore = defineStore('book', {
       } finally {
         this.loading = false
       }
-<<<<<<< HEAD
-=======
     },
     setCurrentBook(book) {
       this.currentBook = book
@@ -60,7 +52,6 @@ export const useBookStore = defineStore('book', {
       if (book) {
         this.currentBook = book
       }
->>>>>>> 1d48db51b0bcbb5434e8d88420eea15f9c38acc3
     }
   }
 })

@@ -62,6 +62,13 @@
 			}
 		},
 		{
+			"path": "pages/voice/record",
+			"style": {
+				"navigationBarTitleText": "语音记账",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/transaction/index",
 			"style": {
 				"navigationBarTitleText": "交易"

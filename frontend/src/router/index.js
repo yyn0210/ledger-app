@@ -50,6 +50,12 @@ const routes = [
         meta: { title: '交易记录', icon: 'swap-horizontal' }
       },
       {
+        path: 'budget',
+        name: 'Budget',
+        component: () => import('@/views/Budget/index.vue'),
+        meta: { title: '预算管理', icon: 'pie-chart' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

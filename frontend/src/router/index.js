@@ -74,6 +74,12 @@ const routes = [
         meta: { title: '截图记账', icon: 'images' }
       },
       {
+        path: 'voice',
+        name: 'Voice',
+        component: () => import('@/views/Voice/index.vue'),
+        meta: { title: '语音记账', icon: 'mic' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

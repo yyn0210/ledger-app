@@ -32,6 +32,12 @@ const routes = [
         meta: { title: '账本管理', icon: 'book' }
       },
       {
+        path: 'category',
+        name: 'Category',
+        component: () => import('@/views/Category/index.vue'),
+        meta: { title: '分类管理', icon: 'apps' }
+      },
+      {
         path: 'transaction',
         name: 'Transaction',
         redirect: '/transaction/list',

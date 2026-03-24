@@ -12,7 +12,7 @@
 				<u-icon name="filter" size="16"></u-icon>
 				筛选
 			</u-button>
-			<u-button size="small" @click="showAddModal = true" type="primary" :custom-style="{
+			<u-button size="small" @click="goToCreate" type="primary" :custom-style="{
 				height: '36px',
 				borderRadius: '8px'
 			}">
@@ -108,6 +108,9 @@ export default {
 		this.loadMockData();
 	},
 	methods: {
+		goToCreate() {
+			uni.navigateTo({ url: '/pages/transaction/create' });
+		},
 		loadMockData() {
 			this.transactions = [
 				{ id: 1, name: '午餐', category: '餐饮', amount: 35, type: 'expense', date: '今天', categoryColor: '#EF4444', categoryIcon: 'shopping-cart' },

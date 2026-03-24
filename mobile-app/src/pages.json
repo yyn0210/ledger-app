@@ -33,6 +33,13 @@
 			}
 		},
 		{
+			"path": "pages/transaction/create",
+			"style": {
+				"navigationBarTitleText": "快速记账",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/mine/index",
 			"style": {
 				"navigationBarTitleText": "我的"

@@ -55,6 +55,13 @@
 			}
 		},
 		{
+			"path": "pages/screenshot/upload",
+			"style": {
+				"navigationBarTitleText": "截图记账",
+				"navigationStyle": "custom"
+			}
+		},
+		{
 			"path": "pages/transaction/index",
 			"style": {
 				"navigationBarTitleText": "交易"

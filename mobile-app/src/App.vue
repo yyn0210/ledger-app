@@ -1,31 +1,69 @@
-<script setup>
-import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
-
-onLaunch(() => {
-  console.log('App Launch')
-})
-
-onShow(() => {
-  console.log('App Show')
-})
-
-onHide(() => {
-  console.log('App Hide')
-})
+<script>
+export default {
+	onLaunch: function() {
+		console.log('App Launch - 简洛账本');
+	},
+	onShow: function() {
+		console.log('App Show');
+	},
+	onHide: function() {
+		console.log('App Hide');
+	}
+};
 </script>
 
-<style lang="scss">
-/*每个页面公共 css */
-@import '@/uni_modules/uview-ui/index.scss';
+<style>
+/* 全局公共样式 */
 
 page {
-  background-color: #f5f6f7;
-  font-size: 14px;
-  line-height: 1.5;
+	background-color: #F5F6F7;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+	font-size: 14px;
+	line-height: 1.5;
+	color: #1F2937;
 }
 
-/* 全局字体 */
-view, text, button {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+/* 公共类 */
+.container {
+	padding: 16px;
+	min-height: 100vh;
+	box-sizing: border-box;
+}
+
+.card {
+	background: #fff;
+	border-radius: 12px;
+	padding: 16px;
+	margin-bottom: 16px;
+}
+
+/* 主题色 */
+.text-primary {
+	color: #4F46E5;
+}
+
+.text-success {
+	color: #10B981;
+}
+
+.text-error {
+	color: #EF4444;
+}
+
+.text-warning {
+	color: #F59E0B;
+}
+
+.text-info {
+	color: #3B82F6;
+}
+
+/* 收入支出颜色 */
+.income {
+	color: #10B981;
+}
+
+.expense {
+	color: #EF4444;
 }
 </style>

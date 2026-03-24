@@ -1,263 +1,246 @@
 <template>
-  <view class="container">
-    <!-- 用户信息卡片 -->
-    <view class="user-card">
-      <view class="user-avatar">
-        <u-avatar size="80" :text="userInitials" bgColor="#3385ff"></u-avatar>
-      </view>
-      <view class="user-info">
-        <text class="user-name">{{ userName }}</text>
-        <text class="user-desc">智能记账，让理财更简单</text>
-      </view>
-      <u-icon name="arrow-right" size="20" color="#fff"></u-icon>
-    </view>
+	<view class="container">
+		<!-- 用户信息卡片 -->
+		<view class="user-card">
+			<view class="avatar">
+				<u-avatar :size="70" :src="userInfo.avatar || ''"></u-avatar>
+			</view>
+			<view class="user-info">
+				<text class="username">{{ userInfo.username }}</text>
+				<text class="user-desc">{{ userInfo.description }}</text>
+			</view>
+			<u-icon name="arrow-right" size="20" color="#9CA3AF"></u-icon>
+		</view>
 
-    <!-- 数据统计 -->
-    <view class="stats-card">
-      <view class="stats-item">
-        <text class="stats-value">{{ totalDays }}</text>
-        <text class="stats-label">记账天数</text>
-      </view>
-      <view class="stats-divider"></view>
-      <view class="stats-item">
-        <text class="stats-value">{{ totalRecords }}</text>
-        <text class="stats-label">记录笔数</text>
-      </view>
-      <view class="stats-divider"></view>
-      <view class="stats-item">
-        <text class="stats-value">{{ totalAmount }}</text>
-        <text class="stats-label">累计金额</text>
-      </view>
-    </view>
+		<!-- 统计卡片 -->
+		<view class="stats-card">
+			<view class="stat-item">
+				<text class="stat-value">{{ stats.totalDays }}</text>
+				<text class="stat-label">记账天数</text>
+			</view>
+			<view class="stat-divider"></view>
+			<view class="stat-item">
+				<text class="stat-value">{{ stats.totalTransactions }}</text>
+				<text class="stat-label">交易笔数</text>
+			</view>
+			<view class="stat-divider"></view>
+			<view class="stat-item">
+				<text class="stat-value">{{ stats.totalAmount }}</text>
+				<text class="stat-label">累计金额</text>
+			</view>
+		</view>
 
-    <!-- 功能列表 -->
-    <view class="menu-section">
-      <view class="menu-group">
-        <u-cell-group>
-          <u-cell 
-            title="账本管理" 
-            :icon="book" 
-            isLink
-            @click="goToBookManage"
-          ></u-cell>
-          <u-cell 
-            title="分类管理" 
-            icon="grid" 
-            isLink
-            @click="goToCategoryManage"
-          ></u-cell>
-          <u-cell 
-            title="账户管理" 
-            icon="bank-card" 
-            isLink
-            @click="goToAccountManage"
-          ></u-cell>
-        </u-cell-group>
-      </view>
+		<!-- 功能列表 -->
+		<view class="menu-list">
+			<view class="menu-group">
+				<text class="group-title">账本管理</text>
+				<view class="menu-item" @click="goToPage('/pages/book/index')">
+					<view class="menu-left">
+						<u-icon name="book" size="20" color="#4F46E5"></u-icon>
+						<text class="menu-label">账本切换</text>
+					</view>
+					<u-icon name="arrow-right" size="18" color="#9CA3AF"></u-icon>
+				</view>
+				<view class="menu-item" @click="showToast('分类管理开发中')">
+					<view class="menu-left">
+						<u-icon name="folder" size="20" color="#10B981"></u-icon>
+						<text class="menu-label">分类管理</text>
+					</view>
+					<u-icon name="arrow-right" size="18" color="#9CA3AF"></u-icon>
+				</view>
+			</view>
 
-      <view class="menu-group">
-        <u-cell-group>
-          <u-cell 
-            title="预算管理" 
-            icon="piechart" 
-            isLink
-            @click="goToBudget"
-          ></u-cell>
-          <u-cell 
-            title="周期账单" 
-            icon="clock" 
-            isLink
-            @click="goToRecurring"
-          ></u-cell>
-          <u-cell 
-            title="储蓄目标" 
-            icon="star" 
-            isLink
-            @click="goToSavings"
-          ></u-cell>
-        </u-cell-group>
-      </view>
+			<view class="menu-group">
+				<text class="group-title">数据统计</text>
+				<view class="menu-item" @click="showToast('统计报表开发中')">
+					<view class="menu-left">
+						<u-icon name="piechart" size="20" color="#F59E0B"></u-icon>
+						<text class="menu-label">统计报表</text>
+					</view>
+					<u-icon name="arrow-right" size="18" color="#9CA3AF"></u-icon>
+				</view>
+				<view class="menu-item" @click="showToast('预算管理开发中')">
+					<view class="menu-left">
+						<u-icon name="budget" size="20" color="#3B82F6"></u-icon>
+						<text class="menu-label">预算管理</text>
+					</view>
+					<u-icon name="arrow-right" size="18" color="#9CA3AF"></u-icon>
+				</view>
+			</view>
 
-      <view class="menu-group">
-        <u-cell-group>
-          <u-cell 
-            title="数据导出" 
-            icon="download" 
-            isLink
-            @click="goToExport"
-          ></u-cell>
-          <u-cell 
-            title="设置" 
-            icon="setting" 
-            isLink
-            @click="goToSettings"
-          ></u-cell>
-        </u-cell-group>
-      </view>
-    </view>
+			<view class="menu-group">
+				<text class="group-title">设置</text>
+				<view class="menu-item" @click="showToast('账户设置开发中')">
+					<view class="menu-left">
+						<u-icon name="setting" size="20" color="#6B7280"></u-icon>
+						<text class="menu-label">账户设置</text>
+					</view>
+					<u-icon name="arrow-right" size="18" color="#9CA3AF"></u-icon>
+				</view>
+				<view class="menu-item" @click="showToast('关于我们开发中')">
+					<view class="menu-left">
+						<u-icon name="info-circle" size="20" color="#6B7280"></u-icon>
+						<text class="menu-label">关于我们</text>
+					</view>
+					<u-icon name="arrow-right" size="18" color="#9CA3AF"></u-icon>
+				</view>
+			</view>
+		</view>
 
-    <!-- 版本信息 -->
-    <view class="version-info">
-      <text class="version-text">v1.0.0</text>
-    </view>
-  </view>
+		<!-- 版本信息 -->
+		<view class="version-info">
+			<text class="version">Version 1.0.0</text>
+		</view>
+	</view>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue'
-
-const userName = ref('新用户')
-const userInitials = computed(() => {
-  return userName.value.charAt(0).toUpperCase()
-})
-const totalDays = ref('0')
-const totalRecords = ref('0')
-const totalAmount = ref('¥0.00')
-
-const goToBookManage = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
-
-const goToCategoryManage = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
-
-const goToAccountManage = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
-
-const goToBudget = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
-
-const goToRecurring = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
-
-const goToSavings = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
-
-const goToExport = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
-
-const goToSettings = () => {
-  uni.showToast({
-    title: '功能开发中',
-    icon: 'none'
-  })
-}
+<script>
+export default {
+	data() {
+		return {
+			userInfo: {
+				username: '简洛用户',
+				description: '精简生活，逻辑理财',
+				avatar: ''
+			},
+			stats: {
+				totalDays: 30,
+				totalTransactions: 156,
+				totalAmount: '23.5K'
+			}
+		};
+	},
+	methods: {
+		goToPage(url) {
+			uni.navigateTo({ url });
+		},
+		showToast(message) {
+			uni.showToast({ title: message, icon: 'none' });
+		}
+	}
+};
 </script>
 
-<style lang="scss" scoped>
+<style scoped>
 .container {
-  min-height: 100vh;
-  background-color: #f5f6f7;
+	padding: 16px;
+	padding-bottom: 80px;
+	background: #F5F6F7;
+	min-height: 100vh;
 }
 
 .user-card {
-  display: flex;
-  align-items: center;
-  padding: 30px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  
-  .user-avatar {
-    margin-right: 16px;
-  }
-  
-  .user-info {
-    flex: 1;
-    
-    .user-name {
-      display: block;
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 6px;
-    }
-    
-    .user-desc {
-      display: block;
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.8);
-    }
-  }
+	background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+	border-radius: 16px;
+	padding: 24px 16px;
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	color: #fff;
+	margin-bottom: 16px;
+
+	.avatar {
+		flex-shrink: 0;
+	}
+
+	.user-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+
+		.username {
+			font-size: 18px;
+			font-weight: 600;
+		}
+
+		.user-desc {
+			font-size: 13px;
+			opacity: 0.8;
+		}
+	}
 }
 
 .stats-card {
-  display: flex;
-  align-items: center;
-  margin: 16px;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 12px;
-  
-  .stats-item {
-    flex: 1;
-    text-align: center;
-    
-    .stats-value {
-      display: block;
-      font-size: 24px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 6px;
-    }
-    
-    .stats-label {
-      display: block;
-      font-size: 13px;
-      color: #999;
-    }
-  }
-  
-  .stats-divider {
-    width: 1px;
-    height: 40px;
-    background-color: #e0e0e0;
-  }
+	background: #fff;
+	border-radius: 12px;
+	padding: 20px 16px;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	margin-bottom: 16px;
+
+	.stat-item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+
+		.stat-value {
+			font-size: 20px;
+			font-weight: 600;
+			color: #4F46E5;
+		}
+
+		.stat-label {
+			font-size: 12px;
+			color: #9CA3AF;
+		}
+	}
+
+	.stat-divider {
+		width: 1px;
+		height: 40px;
+		background: #F3F4F6;
+	}
 }
 
-.menu-section {
-  padding: 0 16px;
-}
+.menu-list {
+	.menu-group {
+		background: #fff;
+		border-radius: 12px;
+		padding: 16px;
+		margin-bottom: 16px;
 
-.menu-group {
-  margin-bottom: 16px;
-  background-color: #fff;
-  border-radius: 12px;
-  overflow: hidden;
+		.group-title {
+			display: block;
+			font-size: 13px;
+			color: #9CA3AF;
+			margin-bottom: 12px;
+		}
+
+		.menu-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 12px 0;
+			border-bottom: 1px solid #F3F4F6;
+
+			&:last-child {
+				border-bottom: none;
+			}
+
+			.menu-left {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+
+				.menu-label {
+					font-size: 15px;
+					color: #1F2937;
+				}
+			}
+		}
+	}
 }
 
 .version-info {
-  text-align: center;
-  padding: 30px 0;
-  
-  .version-text {
-    font-size: 13px;
-    color: #999;
-  }
+	text-align: center;
+	padding: 20px 0;
+
+	.version {
+		font-size: 12px;
+		color: #9CA3AF;
+	}
 }
 </style>

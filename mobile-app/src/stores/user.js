@@ -1,68 +1,28 @@
-import { defineStore } from 'pinia'
-import { login, register, getUserInfo, logout } from '@/api/auth'
+import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('user', {
-  state: () => ({
-    token: uni.getStorageSync('token') || '',
-    userInfo: null,
-    isLoggedIn: false
-  }),
-  
-  getters: {
-    userId: (state) => state.userInfo?.id,
-    userName: (state) => state.userInfo?.name,
-    userAvatar: (state) => state.userInfo?.avatar
-  },
-  
-  actions: {
-    // 登录
-    async login(loginForm) {
-      try {
-        const res = await login(loginForm)
-        this.token = res.data?.token || res.token
-        uni.setStorageSync('token', this.token)
-        await this.getUserInfo()
-        return res
-      } catch (error) {
-        return Promise.reject(error)
-      }
-    },
-    
-    // 注册
-    async register(registerData) {
-      try {
-        const res = await register(registerData)
-        return res
-      } catch (error) {
-        return Promise.reject(error)
-      }
-    },
-    
-    // 获取用户信息
-    async getUserInfo() {
-      try {
-        const res = await getUserInfo()
-        this.userInfo = res.data
-        this.isLoggedIn = true
-        return res
-      } catch (error) {
-        this.logout()
-        return Promise.reject(error)
-      }
-    },
-    
-    // 退出登录
-    async logout() {
-      try {
-        await logout()
-      } catch (error) {
-        console.error('Logout error:', error)
-      } finally {
-        this.token = ''
-        this.userInfo = null
-        this.isLoggedIn = false
-        uni.removeStorageSync('token')
-      }
-    }
-  }
-})
+	state: () => ({
+		userInfo: {
+			id: 1,
+			username: '简洛用户',
+			avatar: '',
+			description: '精简生活，逻辑理财'
+		},
+		settings: {
+			theme: 'light',
+			currency: 'CNY',
+			firstDayOfWeek: 1
+		}
+	}),
+	getters: {
+		isLoggedIn: (state) => !!state.userInfo.id
+	},
+	actions: {
+		updateUserInfo(info) {
+			this.userInfo = { ...this.userInfo, ...info };
+		},
+		updateSettings(settings) {
+			this.settings = { ...this.settings, ...settings };
+		}
+	}
+});

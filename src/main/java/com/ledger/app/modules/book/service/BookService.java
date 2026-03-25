@@ -6,8 +6,6 @@ import com.ledger.app.modules.book.dto.BookResponse;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
 import com.ledger.app.modules.book.dto.UpdateBookRequest;
 import com.ledger.app.modules.book.entity.Book;
-import com.ledger.app.modules.book.entity.BookMember;
-import com.ledger.app.modules.book.repository.BookMemberRepository;
 import com.ledger.app.modules.book.repository.BookRepository;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 public class BookService extends ServiceImpl<BookRepository, Book> {
 
     private final BookRepository bookRepository;
-    private final BookMemberRepository bookMemberRepository;
 
     /**
      * 获取用户的所有账本
@@ -173,120 +170,5 @@ public class BookService extends ServiceImpl<BookRepository, Book> {
         }
 
         return BookResponse.fromEntity(defaultBook);
-    }
-
-    // ==================== 成员管理方法 ====================
-
-    /**
-     * 添加成员到账本
-     */
-    @Transactional
-    public BookMember addMember(Long bookId, Long userId, Long targetUserId, Integer role) {
-        // 检查账本是否存在
-        Book book = bookRepository.selectById(bookId);
-        if (book == null || book.getDeleted() != 0) {
-            throw new BusinessException("账本不存在");
-        }
-
-        // 检查当前用户是否有权限（owner 或 admin）
-        Integer currentUserRole = bookMemberRepository.selectRoleByBookIdAndUserId(bookId, userId);
-        if (currentUserRole == null || currentUserRole == 3) {
-            throw new BusinessException("无权添加成员");
-        }
-
-        // 检查目标用户是否已是成员
-        if (bookMemberRepository.countByBookIdAndUserId(bookId, targetUserId) > 0) {
-            throw new BusinessException("该用户已是账本成员");
-        }
-
-        // 添加成员
-        BookMember member = BookMember.builder()
-                .bookId(bookId)
-                .userId(targetUserId)
-                .role(role != null ? role : 3)
-                .deleted(0)
-                .build();
-
-        bookMemberRepository.insert(member);
-        log.info("添加成员成功：bookId={}, userId={}, role={}", bookId, targetUserId, role);
-
-        return member;
-    }
-
-    /**
-     * 移除账本成员
-     */
-    @Transactional
-    public void removeMember(Long bookId, Long userId, Long targetUserId) {
-        // 检查当前用户是否有权限（owner 或 admin）
-        Integer currentUserRole = bookMemberRepository.selectRoleByBookIdAndUserId(bookId, userId);
-        if (currentUserRole == null || currentUserRole == 3) {
-            throw new BusinessException("无权移除成员");
-        }
-
-        // owner 不能移除自己
-        if (userId.equals(targetUserId)) {
-            throw new BusinessException("owner 不能移除自己，请转让账本或删除账本");
-        }
-
-        // 查询成员
-        List<BookMember> members = bookMemberRepository.selectList(
-            new LambdaQueryWrapper<BookMember>()
-                .eq(BookMember::getBookId, bookId)
-                .eq(BookMember::getUserId, targetUserId)
-        );
-
-        if (members.isEmpty()) {
-            throw new BusinessException("该用户不是账本成员");
-        }
-
-        // 软删除
-        BookMember member = members.get(0);
-        member.setDeleted(1);
-        bookMemberRepository.updateById(member);
-        log.info("移除成员成功：bookId={}, userId={}", bookId, targetUserId);
-    }
-
-    /**
-     * 更新成员角色
-     */
-    @Transactional
-    public void updateMemberRole(Long bookId, Long userId, Long targetUserId, Integer newRole) {
-        // 只有 owner 可以修改成员角色
-        Integer currentUserRole = bookMemberRepository.selectRoleByBookIdAndUserId(bookId, userId);
-        if (currentUserRole == null || currentUserRole != 1) {
-            throw new BusinessException("只有 owner 可以修改成员角色");
-        }
-
-        // 查询成员
-        List<BookMember> members = bookMemberRepository.selectList(
-            new LambdaQueryWrapper<BookMember>()
-                .eq(BookMember::getBookId, bookId)
-                .eq(BookMember::getUserId, targetUserId)
-        );
-
-        if (members.isEmpty()) {
-            throw new BusinessException("该用户不是账本成员");
-        }
-
-        // 更新角色
-        BookMember member = members.get(0);
-        member.setRole(newRole);
-        bookMemberRepository.updateById(member);
-        log.info("更新成员角色成功：bookId={}, userId={}, newRole={}", bookId, targetUserId, newRole);
-    }
-
-    /**
-     * 获取账本成员列表
-     */
-    @Transactional(readOnly = true)
-    public List<BookMember> getMembersByBookId(Long bookId, Long userId) {
-        // 检查当前用户是否是成员
-        Integer role = bookMemberRepository.selectRoleByBookIdAndUserId(bookId, userId);
-        if (role == null) {
-            throw new BusinessException("无权访问该账本");
-        }
-
-        return bookMemberRepository.selectByBookId(bookId);
     }
 }

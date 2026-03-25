@@ -80,24 +80,6 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
     int countByBookId(@Param("bookId") Long bookId);
 
     /**
-     * 统计指定分类的支出
-     *
-     * @param bookId 账本 ID
-     * @param categoryId 分类 ID
-     * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return 总支出
-     */
-    @Select("SELECT COALESCE(SUM(amount), 0) FROM transactions " +
-            "WHERE book_id = #{bookId} AND category_id = #{categoryId} AND type = 2 AND deleted = 0 " +
-            "AND transaction_date BETWEEN #{startDate} AND #{endDate}")
-    BigDecimal sumExpensesByBookIdAndCategoryIdAndDateRange(
-            @Param("bookId") Long bookId,
-            @Param("categoryId") Long categoryId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
-
-    /**
      * 增加账户余额
      *
      * @param accountId 账户 ID
@@ -124,4 +106,20 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
      * @return 影响行数
      */
     int insertBatch(@Param("list") List<Transaction> transactions);
+
+    /**
+     * 按分类统计支出
+     */
+    @Select("<script>" +
+            "SELECT COALESCE(SUM(amount), 0) FROM transactions " +
+            "WHERE book_id = #{bookId} AND deleted = 0 AND type = 2 " +
+            "<if test='categoryId != null'>AND category_id = #{categoryId}</if> " +
+            "<if test='startDate != null'>AND transaction_date &gt;= #{startDate}</if> " +
+            "<if test='endDate != null'>AND transaction_date &lt;= #{endDate}</if>" +
+            "</script>")
+    BigDecimal sumExpensesByBookIdAndCategoryIdAndDateRange(
+        @Param("bookId") Long bookId,
+        @Param("categoryId") Long categoryId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate);
 }

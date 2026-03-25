@@ -5,8 +5,6 @@ import com.ledger.app.modules.auth.service.AuthService;
 import com.ledger.app.modules.book.dto.BookResponse;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
 import com.ledger.app.modules.book.dto.UpdateBookRequest;
-import com.ledger.app.modules.book.dto.request.AddMemberRequest;
-import com.ledger.app.modules.book.entity.BookMember;
 import com.ledger.app.modules.book.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -135,72 +133,5 @@ public class BookController {
         }
         BookResponse book = bookService.getOrCreateDefaultBook(userId);
         return Result.success(book);
-    }
-
-    // ==================== 成员管理接口 ====================
-
-    /**
-     * 添加成员到账本
-     */
-    @Operation(summary = "添加成员", description = "添加用户到账本（需要 owner 或 admin 权限）")
-    @PostMapping("/{bookId}/members")
-    public Result<BookMember> addMember(@PathVariable Long bookId,
-                                        @Valid @RequestBody AddMemberRequest request,
-                                        HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        if (userId == null) {
-            return Result.error(401, "未认证");
-        }
-        // TODO: 根据手机号查询用户 ID
-        BookMember member = bookService.addMember(bookId, userId, userId, request.getRole());
-        return Result.success(member);
-    }
-
-    /**
-     * 移除账本成员
-     */
-    @Operation(summary = "移除成员", description = "从账本中移除成员（需要 owner 或 admin 权限）")
-    @DeleteMapping("/{bookId}/members/{targetUserId}")
-    public Result<Void> removeMember(@PathVariable Long bookId,
-                                     @PathVariable Long targetUserId,
-                                     HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        if (userId == null) {
-            return Result.error(401, "未认证");
-        }
-        bookService.removeMember(bookId, userId, targetUserId);
-        return Result.success(null);
-    }
-
-    /**
-     * 更新成员角色
-     */
-    @Operation(summary = "更新成员角色", description = "修改成员的角色（只有 owner 可以操作）")
-    @PutMapping("/{bookId}/members/{targetUserId}/role")
-    public Result<Void> updateMemberRole(@PathVariable Long bookId,
-                                         @PathVariable Long targetUserId,
-                                         @RequestParam Integer role,
-                                         HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        if (userId == null) {
-            return Result.error(401, "未认证");
-        }
-        bookService.updateMemberRole(bookId, userId, targetUserId, role);
-        return Result.success(null);
-    }
-
-    /**
-     * 获取账本成员列表
-     */
-    @Operation(summary = "获取成员列表", description = "获取账本的所有成员")
-    @GetMapping("/{bookId}/members")
-    public Result<List<BookMember>> getMembers(@PathVariable Long bookId,
-                                               HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        if (userId == null) {
-            return Result.error(401, "未认证");
-        }
-        List<BookMember> members = bookService.getMembersByBookId(bookId, userId);
-        return Result.success(members);
     }
 }

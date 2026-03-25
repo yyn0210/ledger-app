@@ -1,6 +1,5 @@
 package com.ledger.app.modules.websocket.handler;
 
-import com.ledger.app.modules.websocket.WebSocketAuthInterceptor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -13,6 +12,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.ledger.app.modules.websocket.WebSocketAuthInterceptor;
 
 /**
  * WebSocket 连接处理器
@@ -68,10 +69,13 @@ public class WebSocketConnectionHandler extends TextWebSocketHandler {
     private Long getUserIdFromSession(WebSocketSession session) {
         try {
             java.security.Principal principal = session.getPrincipal();
-            if (principal instanceof com.ledger.app.modules.websocket.interceptor.WebSocketAuthInterceptor.WebSocketUser) {
-                return ((com.ledger.app.modules.websocket.interceptor.WebSocketAuthInterceptor.WebSocketUser) principal).getUserId();
+            if (principal instanceof WebSocketAuthInterceptor.WebSocketUser) {
+                return ((WebSocketAuthInterceptor.WebSocketUser) principal).getUserId();
             }
             // 从 attributes 获取
+            StompHeaderAccessor accessor = StompHeaderAccessor.wrap(
+                    new org.springframework.messaging.support.GenericMessage<>("")
+            );
             String userIdStr = (String) session.getAttributes().get("userId");
             if (userIdStr != null) {
                 return Long.parseLong(userIdStr);

@@ -161,13 +161,13 @@ public class NotificationServiceImpl implements NotificationService {
                     .pushEnabled(request.getPushEnabled() != null ? request.getPushEnabled() : true)
                     .deleted(0)
                     .build();
-            notificationRepository.insertPreference(preference);
+            notificationRepository.insert(preference);
         } else {
             if (request.getEmailEnabled() != null) preference.setEmailEnabled(request.getEmailEnabled());
             if (request.getSmsEnabled() != null) preference.setSmsEnabled(request.getSmsEnabled());
             if (request.getInAppEnabled() != null) preference.setInAppEnabled(request.getInAppEnabled());
             if (request.getPushEnabled() != null) preference.setPushEnabled(request.getPushEnabled());
-            notificationRepository.updatePreference(preference);
+            notificationRepository.updateById(preference);
         }
 
         log.info("更新通知偏好：userId={}, bookId={}", userId, bookId);
@@ -185,7 +185,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         NotificationTemplate template;
         if (request.getId() != null) {
-            template = notificationRepository.selectTemplateById(request.getId());
+            template = notificationRepository.selectById(request.getId());
             if (template == null) {
                 throw new BusinessException("模板不存在：" + request.getId());
             }
@@ -195,7 +195,7 @@ public class NotificationServiceImpl implements NotificationService {
             template.setTitleTemplate(request.getTitleTemplate());
             template.setBizType(request.getBizType());
             template.setIsEnabled(request.getIsEnabled());
-            notificationRepository.updateTemplate(template);
+            notificationRepository.updateById(template);
         } else {
             template = NotificationTemplate.builder()
                     .name(request.getName())
@@ -207,7 +207,7 @@ public class NotificationServiceImpl implements NotificationService {
                     .isEnabled(request.getIsEnabled())
                     .deleted(0)
                     .build();
-            notificationRepository.insertTemplate(template);
+            notificationRepository.insert(template);
         }
 
         log.info("保存通知模板：templateId={}, code={}", template.getId(), request.getCode());

@@ -1,5 +1,4 @@
 spring:
-<<<<<<< HEAD
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/ledger_db
@@ -13,35 +12,11 @@ spring:
       max-lifetime: 1800000
 
   # Redis 配置
-=======
-  application:
-    name: ledger-app-backend
-  profiles:
-    active: dev
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
-  datasource:
-    url: jdbc:mysql://localhost:3306/ledger_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: root123
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
-      connection-timeout: 30000
-      idle-timeout: 600000
-      max-lifetime: 1800000
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
   data:
     redis:
       host: localhost
       port: 6379
-<<<<<<< HEAD
       password: 
-=======
-      password:
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
       database: 0
       timeout: 5000ms
       lettuce:
@@ -50,7 +25,6 @@ spring:
           max-idle: 8
           min-idle: 0
 
-<<<<<<< HEAD
   # MinIO 配置
   minio:
     endpoint: http://localhost:9000
@@ -63,68 +37,8 @@ jwt:
   secret: your-256-bit-secret-key-for-jwt-token-generation-must-be-long-enough
   expiration: 86400000  # 24 小时
 
-=======
-# 服务端口
-server:
-  port: 8080
-  servlet:
-    context-path: /api
-  tomcat:
-    threads:
-      max: 200
-      min-spare: 10
-    connection-timeout: 20000
-    accept-count: 100
-
-# JWT 配置
-jwt:
-  secret: ledger-app-secret-key-for-jwt-token-generation-2026-change-in-production
-  expiration: 86400000  # 24 小时
-
-# MyBatis Plus 配置
-mybatis-plus:
-  configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-  global-config:
-    db-config:
-      id-type: assign_id
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
-
-# Swagger 配置
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 # 日志配置
 logging:
   level:
     root: INFO
-<<<<<<< HEAD
     com.ledger.app: DEBUG
-=======
-    com.ledger: DEBUG
-    org.springframework.web: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/ledger-app.log
-    max-size: 10MB
-    max-history: 30
-
-# Actuator 监控
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics
-  endpoint:
-    health:
-      show-details: when_authorized
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1

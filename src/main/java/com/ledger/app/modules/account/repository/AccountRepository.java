@@ -65,30 +65,22 @@ public interface AccountRepository extends BaseMapper<Account> {
     int countByBookId(@Param("bookId") Long bookId);
 
     /**
-     * 减少账户余额
-     *
-     * @param id 账户 ID
-     * @param amount 金额
-     * @return 影响行数
-     */
-    @org.apache.ibatis.annotations.Update("UPDATE accounts SET balance = balance - #{amount} WHERE id = #{id} AND deleted = 0")
-    int decreaseBalance(@Param("id") Long id, @Param("amount") BigDecimal amount);
-
-    /**
-     * 增加账户余额
-     *
-     * @param id 账户 ID
-     * @param amount 金额
-     * @return 影响行数
-     */
-    @org.apache.ibatis.annotations.Update("UPDATE accounts SET balance = balance + #{amount} WHERE id = #{id} AND deleted = 0")
-    int increaseBalance(@Param("id") Long id, @Param("amount") BigDecimal amount);
-
-    /**
      * 类型余额 DTO
      */
     interface TypeBalance {
         Integer getType();
         BigDecimal getBalance();
     }
+
+    /**
+     * 增加账户余额
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE accounts SET balance = balance + #{amount} WHERE id = #{id} AND deleted = 0")
+    int increaseBalance(@Param("id") Long id, @Param("amount") BigDecimal amount);
+
+    /**
+     * 减少账户余额
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE accounts SET balance = balance - #{amount} WHERE id = #{id} AND deleted = 0")
+    int decreaseBalance(@Param("id") Long id, @Param("amount") BigDecimal amount);
 }

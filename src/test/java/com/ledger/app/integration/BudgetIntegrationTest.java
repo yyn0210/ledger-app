@@ -5,7 +5,7 @@ import com.ledger.app.modules.auth.dto.LoginRequest;
 import com.ledger.app.modules.auth.dto.RegisterRequest;
 import com.ledger.app.modules.auth.dto.AuthResponse;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
-import com.ledger.app.modules.budget.dto.CreateBudgetRequest;
+import com.ledger.app.modules.budget.dto.request.CreateBudgetRequest;
 import com.ledger.app.modules.budget.enums.BudgetPeriod;
 import com.ledger.app.common.result.Result;
 import org.junit.jupiter.api.BeforeEach;

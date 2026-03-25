@@ -1,6 +1,6 @@
 package com.ledger.app.modules.budget;
 
-import com.ledger.app.modules.budget.dto.CreateBudgetRequest;
+import com.ledger.app.modules.budget.dto.request.CreateBudgetRequest;
 import com.ledger.app.modules.budget.entity.Budget;
 import com.ledger.app.modules.budget.enums.BudgetPeriod;
 import com.ledger.app.modules.budget.enums.BudgetStatus;

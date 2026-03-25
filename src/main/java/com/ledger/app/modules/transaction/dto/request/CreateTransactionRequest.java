@@ -3,6 +3,10 @@ package com.ledger.app.modules.transaction.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+<<<<<<< HEAD
+=======
+import lombok.Builder;
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -16,6 +20,10 @@ import java.util.List;
  * @since 2026-03-24
  */
 @Data
+<<<<<<< HEAD
+=======
+@Builder
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 @Schema(description = "创建交易记录请求")
 public class CreateTransactionRequest {
 

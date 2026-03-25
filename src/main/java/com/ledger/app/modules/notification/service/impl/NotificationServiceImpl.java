@@ -161,13 +161,21 @@ public class NotificationServiceImpl implements NotificationService {
                     .pushEnabled(request.getPushEnabled() != null ? request.getPushEnabled() : true)
                     .deleted(0)
                     .build();
+<<<<<<< HEAD
             notificationRepository.insert(preference);
+=======
+            notificationRepository.insertPreference(preference);
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
         } else {
             if (request.getEmailEnabled() != null) preference.setEmailEnabled(request.getEmailEnabled());
             if (request.getSmsEnabled() != null) preference.setSmsEnabled(request.getSmsEnabled());
             if (request.getInAppEnabled() != null) preference.setInAppEnabled(request.getInAppEnabled());
             if (request.getPushEnabled() != null) preference.setPushEnabled(request.getPushEnabled());
+<<<<<<< HEAD
             notificationRepository.updateById(preference);
+=======
+            notificationRepository.updatePreference(preference);
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
         }
 
         log.info("更新通知偏好：userId={}, bookId={}", userId, bookId);
@@ -185,7 +193,11 @@ public class NotificationServiceImpl implements NotificationService {
 
         NotificationTemplate template;
         if (request.getId() != null) {
+<<<<<<< HEAD
             template = notificationRepository.selectById(request.getId());
+=======
+            template = notificationRepository.selectTemplateById(request.getId());
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
             if (template == null) {
                 throw new BusinessException("模板不存在：" + request.getId());
             }
@@ -195,7 +207,11 @@ public class NotificationServiceImpl implements NotificationService {
             template.setTitleTemplate(request.getTitleTemplate());
             template.setBizType(request.getBizType());
             template.setIsEnabled(request.getIsEnabled());
+<<<<<<< HEAD
             notificationRepository.updateById(template);
+=======
+            notificationRepository.updateTemplate(template);
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
         } else {
             template = NotificationTemplate.builder()
                     .name(request.getName())
@@ -207,7 +223,11 @@ public class NotificationServiceImpl implements NotificationService {
                     .isEnabled(request.getIsEnabled())
                     .deleted(0)
                     .build();
+<<<<<<< HEAD
             notificationRepository.insert(template);
+=======
+            notificationRepository.insertTemplate(template);
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
         }
 
         log.info("保存通知模板：templateId={}, code={}", template.getId(), request.getCode());

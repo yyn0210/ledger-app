@@ -118,10 +118,20 @@ public class RecurringBillController {
         Page<RecurringBillResponse> responsePage = recurringBillService.pageByBookId(bookId, userId, page, size);
 
         PageResult<RecurringBillResponse> result = PageResult.<RecurringBillResponse>builder()
+<<<<<<< HEAD
                 .list(responsePage.getRecords())
                 .total(responsePage.getTotal())
                 .page((int) responsePage.getCurrent())
                 .size((int) responsePage.getSize())
+=======
+                .pageNum(responsePage.getCurrent())
+                .pageSize(responsePage.getSize())
+                .total(responsePage.getTotal())
+                .pages(responsePage.getPages())
+                .list(responsePage.getRecords())
+                .hasPrevious(responsePage.getCurrent() > 1)
+                .hasNext(responsePage.getCurrent() < responsePage.getPages())
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
                 .build();
 
         return Result.success(result);

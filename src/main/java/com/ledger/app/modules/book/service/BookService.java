@@ -6,8 +6,11 @@ import com.ledger.app.modules.book.dto.BookResponse;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
 import com.ledger.app.modules.book.dto.UpdateBookRequest;
 import com.ledger.app.modules.book.entity.Book;
+<<<<<<< HEAD
 import com.ledger.app.modules.book.entity.BookMember;
 import com.ledger.app.modules.book.repository.BookMemberRepository;
+=======
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 import com.ledger.app.modules.book.repository.BookRepository;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +30,10 @@ import java.util.stream.Collectors;
 public class BookService extends ServiceImpl<BookRepository, Book> {
 
     private final BookRepository bookRepository;
+<<<<<<< HEAD
     private final BookMemberRepository bookMemberRepository;
+=======
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 
     /**
      * 获取用户的所有账本
@@ -174,6 +180,7 @@ public class BookService extends ServiceImpl<BookRepository, Book> {
 
         return BookResponse.fromEntity(defaultBook);
     }
+<<<<<<< HEAD
 
     // ==================== 成员管理方法 ====================
 
@@ -289,4 +296,6 @@ public class BookService extends ServiceImpl<BookRepository, Book> {
 
         return bookMemberRepository.selectByBookId(bookId);
     }
+=======
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 }

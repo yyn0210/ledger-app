@@ -80,6 +80,27 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
     int countByBookId(@Param("bookId") Long bookId);
 
     /**
+<<<<<<< HEAD
+=======
+     * 统计指定分类的支出
+     *
+     * @param bookId 账本 ID
+     * @param categoryId 分类 ID
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 总支出
+     */
+    @Select("SELECT COALESCE(SUM(amount), 0) FROM transactions " +
+            "WHERE book_id = #{bookId} AND category_id = #{categoryId} AND type = 2 AND deleted = 0 " +
+            "AND transaction_date BETWEEN #{startDate} AND #{endDate}")
+    BigDecimal sumExpensesByBookIdAndCategoryIdAndDateRange(
+            @Param("bookId") Long bookId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    /**
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
      * 增加账户余额
      *
      * @param accountId 账户 ID
@@ -106,6 +127,7 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
      * @return 影响行数
      */
     int insertBatch(@Param("list") List<Transaction> transactions);
+<<<<<<< HEAD
 
     /**
      * 按分类统计支出
@@ -122,4 +144,6 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
         @Param("categoryId") Long categoryId,
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate);
+=======
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 }

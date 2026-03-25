@@ -95,11 +95,20 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<CategoryStatisticsResponse> stats = getCategoryStatistics(bookId, type, startDate, endDate);
 
         // 排序并取 TOP N
+<<<<<<< HEAD
         return stats.stream()
                 .sorted(Comparator.comparing(CategoryStatisticsResponse::getAmount).reversed())
                 .limit(limit != null ? limit : 10)
                 .map((s, index) -> RankingResponse.builder()
                         .rank(index + 1)
+=======
+        java.util.concurrent.atomic.AtomicInteger rank = new java.util.concurrent.atomic.AtomicInteger(0);
+        return stats.stream()
+                .sorted(Comparator.comparing(CategoryStatisticsResponse::getAmount).reversed())
+                .limit(limit != null ? limit : 10)
+                .map(s -> RankingResponse.builder()
+                        .rank(rank.incrementAndGet())
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
                         .categoryId(s.getCategoryId())
                         .categoryName(s.getCategoryName())
                         .icon(s.getIcon())

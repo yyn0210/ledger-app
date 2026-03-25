@@ -1,10 +1,18 @@
 package com.ledger.app.modules.book;
 
+<<<<<<< HEAD
 import com.ledger.app.modules.book.dto.request.CreateBookRequest;
 import com.ledger.app.modules.book.dto.response.BookResponse;
 import com.ledger.app.modules.book.entity.Book;
 import com.ledger.app.modules.book.repository.BookRepository;
 import com.ledger.app.modules.book.service.impl.BookServiceImpl;
+=======
+import com.ledger.app.modules.book.dto.CreateBookRequest;
+import com.ledger.app.modules.book.dto.BookResponse;
+import com.ledger.app.modules.book.entity.Book;
+import com.ledger.app.modules.book.repository.BookRepository;
+import com.ledger.app.modules.book.service.BookService;
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 import com.ledger.app.common.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +41,11 @@ class BookServiceTest {
     private BookRepository bookRepository;
 
     @InjectMocks
+<<<<<<< HEAD
     private BookServiceImpl bookService;
+=======
+    private BookService bookService;
+>>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 
     private CreateBookRequest createRequest;
     private Book book;

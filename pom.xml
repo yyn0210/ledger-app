@@ -67,13 +67,6 @@
 			<artifactId>mybatis-plus-spring-boot3-starter</artifactId>
 			<version>${mybatis-plus.version}</version>
 		</dependency>
-		<!-- MyBatis Plus Spring Boot 3 Starter Web (optional, for some features) -->
-		<dependency>
-			<groupId>com.baomidou</groupId>
-			<artifactId>mybatis-plus-spring-boot3-starter-web</artifactId>
-			<version>${mybatis-plus.version}</version>
-			<optional>true</optional>
-		</dependency>
 
 		<!-- Database -->
 		<dependency>

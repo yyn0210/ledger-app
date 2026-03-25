@@ -37,6 +37,18 @@ jwt:
   secret: your-256-bit-secret-key-for-jwt-token-generation-must-be-long-enough
   expiration: 86400000  # 24 小时
 
+# MyBatis Plus 配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
 # 日志配置
 logging:
   level:

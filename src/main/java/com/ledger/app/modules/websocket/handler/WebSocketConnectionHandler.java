@@ -13,7 +13,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.ledger.app.modules.websocket.WebSocketAuthInterceptor;
+import com.ledger.app.modules.websocket.interceptor.WebSocketAuthInterceptor;
 
 /**
  * WebSocket 连接处理器

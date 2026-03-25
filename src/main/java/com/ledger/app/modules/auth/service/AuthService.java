@@ -17,11 +17,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-<<<<<<< HEAD
 import javax.crypto.SecretKey;
-=======
 import javax.crypto.SecretKey; // javax.crypto is correct, not jakarta
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Date;

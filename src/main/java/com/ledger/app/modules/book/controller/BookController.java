@@ -5,11 +5,8 @@ import com.ledger.app.modules.auth.service.AuthService;
 import com.ledger.app.modules.book.dto.BookResponse;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
 import com.ledger.app.modules.book.dto.UpdateBookRequest;
-<<<<<<< HEAD
 import com.ledger.app.modules.book.dto.request.AddMemberRequest;
 import com.ledger.app.modules.book.entity.BookMember;
-=======
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 import com.ledger.app.modules.book.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -139,7 +136,6 @@ public class BookController {
         BookResponse book = bookService.getOrCreateDefaultBook(userId);
         return Result.success(book);
     }
-<<<<<<< HEAD
 
     // ==================== 成员管理接口 ====================
 
@@ -207,6 +203,4 @@ public class BookController {
         List<BookMember> members = bookService.getMembersByBookId(bookId, userId);
         return Result.success(members);
     }
-=======
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 }

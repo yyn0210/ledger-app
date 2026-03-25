@@ -1,17 +1,14 @@
 package com.ledger.app.common.result;
 
-<<<<<<< HEAD
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-=======
 import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 import java.util.List;
 
 /**
@@ -19,11 +16,9 @@ import java.util.List;
  */
 @Data
 @Builder
-<<<<<<< HEAD
 @NoArgsConstructor
 @AllArgsConstructor
 public class PageResult<T> {
-=======
 public class PageResult<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -47,7 +42,6 @@ public class PageResult<T> implements Serializable {
      * 总页数
      */
     private Long pages;
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 
     /**
      * 数据列表
@@ -55,7 +49,6 @@ public class PageResult<T> implements Serializable {
     private List<T> list;
 
     /**
-<<<<<<< HEAD
      * 总数
      */
     private Long total;
@@ -73,7 +66,6 @@ public class PageResult<T> implements Serializable {
      * 每页数量
      */
     private Integer size;
-=======
      * 是否有上一页
      */
     private Boolean hasPrevious;
@@ -110,5 +102,4 @@ public class PageResult<T> implements Serializable {
                 .hasNext(page.getCurrent() < page.getPages())
                 .build();
     }
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 }

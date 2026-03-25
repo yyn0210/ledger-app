@@ -80,8 +80,6 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
     int countByBookId(@Param("bookId") Long bookId);
 
     /**
-<<<<<<< HEAD
-=======
      * 统计指定分类的支出
      *
      * @param bookId 账本 ID
@@ -100,7 +98,6 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
             @Param("endDate") LocalDate endDate);
 
     /**
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
      * 增加账户余额
      *
      * @param accountId 账户 ID
@@ -127,7 +124,6 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
      * @return 影响行数
      */
     int insertBatch(@Param("list") List<Transaction> transactions);
-<<<<<<< HEAD
 
     /**
      * 按分类统计支出
@@ -144,6 +140,4 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
         @Param("categoryId") Long categoryId,
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate);
-=======
->>>>>>> 8b276bd7cad2de2730fddd7f4684cd33bf31cfe1
 }

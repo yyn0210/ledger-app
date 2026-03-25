@@ -1,32 +1,16 @@
 <template>
   <div class="settings">
-    <n-card title="设置">
-      <n-space vertical>
-        <n-button @click="message.success('功能开发中')">修改密码</n-button>
-        <n-button @click="message.success('功能开发中')">通知设置</n-button>
-        <n-button @click="message.success('功能开发中')">数据导出</n-button>
-        <n-button type="error" @click="handleLogout">退出登录</n-button>
-      </n-space>
+    <n-card title="个人设置">
+      <n-form label-placement="top" label-width="100">
+        <n-form-item label="昵称"><n-input placeholder="请输入昵称" /></n-form-item>
+        <n-form-item label="手机号"><n-input placeholder="请输入手机号" /></n-form-item>
+        <n-form-item label="邮箱"><n-input placeholder="请输入邮箱" /></n-form-item>
+        <n-form-item><n-button type="primary">保存</n-button></n-form-item>
+      </n-form>
     </n-card>
   </div>
 </template>
 
-<script setup>
-import { useMessage } from 'naive-ui'
-import { useRouter } from 'vue-router'
-
-const message = useMessage()
-const router = useRouter()
-
-const handleLogout = () => {
-  localStorage.removeItem('token')
-  router.push('/login')
-}
-</script>
-
 <style scoped>
-.settings {
-  max-width: 600px;
-  margin: 0 auto;
-}
+.settings { display: flex; flex-direction: column; gap: 20px; max-width: 800px; }
 </style>

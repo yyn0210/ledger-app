@@ -15,6 +15,7 @@ import com.ledger.app.modules.category.repository.CategoryRepository;
 import com.ledger.app.modules.transaction.dto.response.TransactionResponse;
 import com.ledger.app.modules.transaction.entity.Transaction;
 import com.ledger.app.modules.transaction.repository.TransactionRepository;
+import com.ledger.app.modules.websocket.service.WebSocketMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class BudgetServiceImpl implements BudgetService {
     private final BudgetRepository budgetRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
+    private final WebSocketMessageService webSocketMessageService;
 
     @Override
     @Transactional(readOnly = true)
@@ -275,14 +277,28 @@ public class BudgetServiceImpl implements BudgetService {
      */
     private void updateBudgetStatus(Budget budget, BigDecimal spentAmount) {
         BigDecimal progress = calculateProgress(budget.getAmount(), spentAmount);
+        BigDecimal oldProgress = calculateProgress(budget.getAmount(), 
+            budgetRepository.sumExpensesByBookIdAndCategoryIdAndDateRange(
+                budget.getBookId(), budget.getCategoryId(),
+                budget.getStartDate(), budget.getEndDate().minusDays(1)
+            ));
 
         // 检查是否超支
         if (progress.compareTo(new BigDecimal("100")) > 0) {
             budget.setStatus(BudgetStatus.OVERDUE.getCode());
+            // 发送超支通知
+            sendBudgetOverdueNotification(budget.getUserId(), budget, progress);
         }
         // 检查是否周期结束
         else if (LocalDate.now().isAfter(budget.getEndDate())) {
             budget.setStatus(BudgetStatus.COMPLETED.getCode());
+        }
+        // 检查是否达到预警线（且之前未达到）
+        else if (progress.compareTo(budget.getAlertThreshold()) > 0 && 
+                 oldProgress.compareTo(budget.getAlertThreshold()) <= 0) {
+            budget.setStatus(BudgetStatus.ACTIVE.getCode());
+            // 发送预警通知
+            sendBudgetAlertNotification(budget.getUserId(), budget, progress);
         }
         // 否则为进行中
         else {
@@ -338,5 +354,41 @@ public class BudgetServiceImpl implements BudgetService {
         }
         Category category = categoryRepository.selectById(categoryId);
         return category != null ? category.getName() : "未知分类";
+    }
+
+    /**
+     * 发送预算预警通知
+     */
+    private void sendBudgetAlertNotification(Long userId, Budget budget, BigDecimal progress) {
+        try {
+            webSocketMessageService.sendBudgetAlert(
+                userId,
+                budget.getBookId(),
+                budget.getId(),
+                budget.getName(),
+                progress
+            );
+            log.info("发送预算预警通知：userId={}, budgetId={}, progress={}% ", userId, budget.getId(), progress);
+        } catch (Exception e) {
+            log.error("发送预算预警 WebSocket 通知失败：error={}", e.getMessage());
+        }
+    }
+
+    /**
+     * 发送预算超支通知
+     */
+    private void sendBudgetOverdueNotification(Long userId, Budget budget, BigDecimal progress) {
+        try {
+            webSocketMessageService.sendBudgetOverdue(
+                userId,
+                budget.getBookId(),
+                budget.getId(),
+                budget.getName(),
+                progress
+            );
+            log.info("发送预算超支通知：userId={}, budgetId={}, progress={}% ", userId, budget.getId(), progress);
+        } catch (Exception e) {
+            log.error("发送预算超支 WebSocket 通知失败：error={}", e.getMessage());
+        }
     }
 }

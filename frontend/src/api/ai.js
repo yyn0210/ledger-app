@@ -1,16 +1,13 @@
 import request from './request'
 
-// AI 智能分析
-export function analyzeTransactions(params) {
-  return request.get('/ai/analyze', { params })
+export function aiClassify(data) {
+  return request({ url: '/ai/classify', method: 'post', data })
 }
 
-// AI 预算建议
-export function getBudgetSuggestions() {
-  return request.get('/ai/budget/suggestions')
+export function aiAnalyze(params) {
+  return request({ url: '/ai/analyze', method: 'get', params })
 }
 
-// AI 消费洞察
-export function getSpendingInsights() {
-  return request.get('/ai/insights')
+export function aiBudgetSuggestion(params) {
+  return request({ url: '/ai/budget-suggestion', method: 'get', params })
 }

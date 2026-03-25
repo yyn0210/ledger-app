@@ -1,94 +1,218 @@
 import { defineStore } from 'pinia'
-import { getStatistics, getTrendData, getCategoryStats, getMonthlyComparison } from '@/api/statistics'
+import {
+  getStatisticsOverview,
+  getTrendData,
+  getCategoryStats,
+  getAccountStats,
+  getRankings,
+  getBudgetExecution
+} from '@/api/statistics'
 
 export const useStatisticsStore = defineStore('statistics', {
   state: () => ({
-    overview: {
-      totalIncome: 0,
-      totalExpense: 0,
-      totalBalance: 0,
-      transactionCount: 0,
-      avgDailyExpense: 0
+    overview: null,
+    trendData: [],
+    categoryData: [],
+    accountData: [],
+    rankings: {
+      category: [],
+      day: [],
+      single: []
     },
-    trendData: {
-      dates: [],
-      income: [],
-      expense: []
-    },
-    categoryData: {
-      expense: [],
-      income: []
-    },
-    monthlyData: [],
+    budgetExecution: [],
     loading: false,
-    filter: {
+    dateRange: {
       startDate: null,
-      endDate: null,
-      range: 'month' // 'week' | 'month' | 'year' | 'custom'
+      endDate: null
     }
   }),
   getters: {
-    incomeExpenseRatio: state => {
-      if (state.overview.totalIncome === 0) return 0
-      return ((state.overview.totalExpense / state.overview.totalIncome) * 100).toFixed(1)
+    // 本月统计
+    currentMonthStats: state => {
+      if (!state.overview) return null
+      return {
+        income: state.overview.income || 0,
+        expense: state.overview.expense || 0,
+        balance: (state.overview.income || 0) - (state.overview.expense || 0)
+      }
     },
+    // 环比（与上月相比）
+    monthOverMonth: state => {
+      if (!state.overview) return null
+      return {
+        incomeChange: state.overview.incomeChange || 0,
+        expenseChange: state.overview.expenseChange || 0
+      }
+    },
+    // 分类占比（饼图数据）
+    categoryPieData: state => {
+      return state.categoryData.map(item => ({
+        name: item.categoryName,
+        value: item.amount,
+        color: item.color
+      }))
+    },
+    // 支出 TOP 分类
     topCategories: state => {
-      return [...state.categoryData.expense]
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5)
+      return state.rankings.category?.slice(0, 5) || []
+    },
+    // 支出 TOP 日期
+    topDays: state => {
+      return state.rankings.day?.slice(0, 5) || []
+    },
+    // 单笔最大支出
+    maxSingleExpense: state => {
+      return state.rankings.single?.[0] || null
     }
   },
   actions: {
+    /**
+     * 设置日期范围
+     */
+    setDateRange(startDate, endDate) {
+      this.dateRange = { startDate, endDate }
+    },
+
+    /**
+     * 获取统计概览
+     * @param {Object} params - 查询参数
+     */
     async fetchOverview(params = {}) {
       this.loading = true
       try {
-        const data = await getStatistics({ ...this.filter, ...params })
-        this.overview = data.overview || this.overview
+        const data = await getStatisticsOverview({
+          ...this.dateRange,
+          ...params
+        })
+        this.overview = data
+        return data
       } catch (error) {
-        console.error('获取统计概览失败:', error)
+        console.error('获取概览数据失败:', error)
+        throw error
       } finally {
         this.loading = false
       }
     },
+
+    /**
+     * 获取趋势数据
+     * @param {Object} params - 查询参数
+     */
     async fetchTrendData(params = {}) {
+      this.loading = true
       try {
-        const data = await getTrendData({ ...this.filter, ...params })
-        this.trendData = data || this.trendData
+        const data = await getTrendData({
+          ...this.dateRange,
+          ...params
+        })
+        this.trendData = data.list || data.items || data
+        return this.trendData
       } catch (error) {
         console.error('获取趋势数据失败:', error)
+        throw error
+      } finally {
+        this.loading = false
       }
     },
+
+    /**
+     * 获取分类统计
+     * @param {Object} params - 查询参数
+     */
     async fetchCategoryStats(params = {}) {
+      this.loading = true
       try {
-        const data = await getCategoryStats({ ...this.filter, ...params })
-        this.categoryData = data || this.categoryData
+        const data = await getCategoryStats({
+          ...this.dateRange,
+          ...params
+        })
+        this.categoryData = data.list || data.items || data
+        return this.categoryData
       } catch (error) {
         console.error('获取分类统计失败:', error)
+        throw error
+      } finally {
+        this.loading = false
       }
     },
-    async fetchMonthlyComparison(params = {}) {
+
+    /**
+     * 获取账户统计
+     * @param {Object} params - 查询参数
+     */
+    async fetchAccountStats(params = {}) {
+      this.loading = true
       try {
-        const data = await getMonthlyComparison({ ...this.filter, ...params })
-        this.monthlyData = data || this.monthlyData
+        const data = await getAccountStats({
+          ...this.dateRange,
+          ...params
+        })
+        this.accountData = data.list || data.items || data
+        return this.accountData
       } catch (error) {
-        console.error('获取月度对比失败:', error)
+        console.error('获取账户统计失败:', error)
+        throw error
+      } finally {
+        this.loading = false
       }
     },
-    async fetchAll(params = {}) {
-      await Promise.all([
-        this.fetchOverview(params),
-        this.fetchTrendData(params),
-        this.fetchCategoryStats(params),
-        this.fetchMonthlyComparison(params)
-      ])
+
+    /**
+     * 获取排行榜
+     * @param {Object} params - 查询参数
+     */
+    async fetchRankings(params = {}) {
+      this.loading = true
+      try {
+        const data = await getRankings({
+          ...this.dateRange,
+          ...params
+        })
+        this.rankings = data
+        return data
+      } catch (error) {
+        console.error('获取排行榜失败:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
-    setFilter(filter) {
-      this.filter = { ...this.filter, ...filter }
+
+    /**
+     * 获取预算执行数据
+     * @param {Object} params - 查询参数
+     */
+    async fetchBudgetExecution(params = {}) {
+      this.loading = true
+      try {
+        const data = await getBudgetExecution({
+          ...this.dateRange,
+          ...params
+        })
+        this.budgetExecution = data
+        return data
+      } catch (error) {
+        console.error('获取预算执行数据失败:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
     },
-    setRange(range, startDate, endDate) {
-      this.filter.range = range
-      if (startDate) this.filter.startDate = startDate
-      if (endDate) this.filter.endDate = endDate
+
+    /**
+     * 刷新所有统计数据
+     */
+    async refreshAll(params = {}) {
+      try {
+        await Promise.all([
+          this.fetchOverview(params),
+          this.fetchTrendData(params),
+          this.fetchCategoryStats(params),
+          this.fetchRankings(params)
+        ])
+      } catch (error) {
+        console.error('刷新统计数据失败:', error)
+      }
     }
   }
 })

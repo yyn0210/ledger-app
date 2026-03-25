@@ -13,6 +13,7 @@ import com.ledger.app.modules.transaction.entity.Transaction;
 import com.ledger.app.modules.transaction.enums.TransactionType;
 import com.ledger.app.modules.transaction.repository.TransactionRepository;
 import com.ledger.app.modules.transaction.service.TransactionService;
+import com.ledger.app.modules.websocket.service.WebSocketMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 交易服务实现
@@ -39,6 +42,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
+    private final WebSocketMessageService webSocketMessageService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -110,6 +114,9 @@ public class TransactionServiceImpl implements TransactionService {
         // 更新账户余额
         updateAccountBalance(transaction);
 
+        // 发送 WebSocket 通知
+        sendTransactionCreatedNotification(userId, transaction);
+
         log.info("创建交易记录成功：userId={}, transactionId={}, amount={}", userId, transaction.getId(), transaction.getAmount());
 
         return buildTransactionResponse(transaction);
@@ -173,6 +180,9 @@ public class TransactionServiceImpl implements TransactionService {
         rollbackAccountBalance(oldAccountId, oldAmount, oldType);
         updateAccountBalance(transaction);
 
+        // 发送 WebSocket 通知
+        sendTransactionUpdatedNotification(userId, transaction);
+
         log.info("更新交易记录成功：userId={}, transactionId={}", userId, id);
 
         return buildTransactionResponse(transaction);
@@ -193,6 +203,9 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setDeleted(1);
         transaction.setUpdatedAt(LocalDateTime.now());
         transactionRepository.updateById(transaction);
+
+        // 发送 WebSocket 通知
+        sendTransactionDeletedNotification(transaction.getUserId(), transaction.getBookId(), id);
 
         log.info("删除交易记录成功：transactionId={}", id);
     }
@@ -336,6 +349,59 @@ public class TransactionServiceImpl implements TransactionService {
         } catch (JsonProcessingException e) {
             log.warn("JSON 序列化失败：{}", e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * 发送交易创建通知
+     */
+    private void sendTransactionCreatedNotification(Long userId, Transaction transaction) {
+        try {
+            Map<String, Object> transactionData = new HashMap<>();
+            transactionData.put("id", transaction.getId());
+            transactionData.put("bookId", transaction.getBookId());
+            transactionData.put("type", transaction.getType());
+            transactionData.put("amount", transaction.getAmount());
+            transactionData.put("categoryId", transaction.getCategoryId());
+            transactionData.put("accountId", transaction.getAccountId());
+            transactionData.put("title", transaction.getTitle());
+            transactionData.put("transactionDate", transaction.getTransactionDate());
+
+            webSocketMessageService.sendTransactionCreated(userId, transaction.getBookId(), transactionData);
+        } catch (Exception e) {
+            log.error("发送交易创建 WebSocket 通知失败：error={}", e.getMessage());
+        }
+    }
+
+    /**
+     * 发送交易更新通知
+     */
+    private void sendTransactionUpdatedNotification(Long userId, Transaction transaction) {
+        try {
+            Map<String, Object> transactionData = new HashMap<>();
+            transactionData.put("id", transaction.getId());
+            transactionData.put("bookId", transaction.getBookId());
+            transactionData.put("type", transaction.getType());
+            transactionData.put("amount", transaction.getAmount());
+            transactionData.put("categoryId", transaction.getCategoryId());
+            transactionData.put("accountId", transaction.getAccountId());
+            transactionData.put("title", transaction.getTitle());
+            transactionData.put("transactionDate", transaction.getTransactionDate());
+
+            webSocketMessageService.sendTransactionUpdated(userId, transaction.getBookId(), transactionData);
+        } catch (Exception e) {
+            log.error("发送交易更新 WebSocket 通知失败：error={}", e.getMessage());
+        }
+    }
+
+    /**
+     * 发送交易删除通知
+     */
+    private void sendTransactionDeletedNotification(Long userId, Long bookId, Long transactionId) {
+        try {
+            webSocketMessageService.sendTransactionDeleted(userId, bookId, transactionId);
+        } catch (Exception e) {
+            log.error("发送交易删除 WebSocket 通知失败：error={}", e.getMessage());
         }
     }
 }

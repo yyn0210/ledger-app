@@ -1,36 +1,34 @@
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath } from 'node:url'
 
 export default defineConfig({
   plugins: [vue()],
   test: {
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx,vue}'],
+    setupFiles: ['./src/test/setup.js'],
+    include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx,vue}'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      threshold: {
-        lines: 70,
-        functions: 70,
-        branches: 70,
-        statements: 70
-      },
       include: ['src/**/*.{js,ts,vue}'],
-      exclude: [
-        'src/main.js',
-        'src/router/index.js',
-        'src/**/mock.js',
-        'src/**/*.spec.{js,ts,vue}',
-        'src/**/*.test.{js,ts,vue}'
-      ]
+      exclude: ['src/**/*.spec.{js,ts,vue}', 'src/**/*.test.{js,ts,vue}'],
+      thresholds: {
+        global: {
+          branches: 75,
+          functions: 80,
+          lines: 80,
+          statements: 80
+        }
+      }
     },
-    setupFiles: ['./src/test/setup.js']
+    transformMode: {
+      web: [/\.[jt]sx?$/, /\.vue$/]
+    }
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': '/src'
     }
   }
 })

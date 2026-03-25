@@ -1,28 +1,39 @@
 <template>
-  <n-select v-model:value="modelValue" :options="options" placeholder="请选择分类" />
+  <n-select
+    v-model:value="selectedValue"
+    :options="categoryOptions"
+    :placeholder="placeholder"
+    :clearable="clearable"
+    @update:value="handleChange"
+  />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
-const modelValue = defineModel({ type: [Number, String] })
 const props = defineProps({
-  type: { type: String, default: 'expense' }
+  modelValue: [String, Number],
+  type: { type: String, default: 'expense', validator: v => ['income', 'expense'].includes(v) },
+  placeholder: { type: String, default: '请选择分类' },
+  clearable: { type: Boolean, default: true }
 })
 
+const emit = defineEmits(['update:modelValue', 'change'])
+const selectedValue = ref(props.modelValue)
+
+watch(() => props.modelValue, val => { selectedValue.value = val })
+
 const expenseCategories = [
-  { label: '餐饮', value: 1 },
-  { label: '交通', value: 2 },
-  { label: '购物', value: 3 },
-  { label: '娱乐', value: 4 },
-  { label: '居住', value: 5 }
+  { label: '餐饮', value: 'food' }, { label: '交通', value: 'transport' },
+  { label: '购物', value: 'shopping' }, { label: '娱乐', value: 'entertainment' },
+  { label: '居住', value: 'housing' }, { label: '其他', value: 'other' }
 ]
 
 const incomeCategories = [
-  { label: '工资', value: 11 },
-  { label: '奖金', value: 12 },
-  { label: '投资', value: 13 }
+  { label: '工资', value: 'salary' }, { label: '奖金', value: 'bonus' },
+  { label: '投资', value: 'investment' }, { label: '其他', value: 'other' }
 ]
 
-const options = computed(() => props.type === 'income' ? incomeCategories : expenseCategories)
+const categoryOptions = computed(() => props.type === 'expense' ? expenseCategories : incomeCategories)
+const handleChange = value => { emit('update:modelValue', value); emit('change', value) }
 </script>

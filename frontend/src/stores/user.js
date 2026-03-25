@@ -1,34 +1,26 @@
 import { defineStore } from 'pinia'
-import { getCurrentUser } from '@/api/auth'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
-    user: null,
-    loading: false
+    token: localStorage.getItem('token') || '',
+    userInfo: null
   }),
   getters: {
-    isLoggedIn: state => !!state.user,
-    username: state => state.user?.username || '',
-    nickname: state => state.user?.nickname || ''
+    isLoggedIn: state => !!state.token,
+    nickname: state => state.userInfo?.nickname || '用户'
   },
   actions: {
-    async fetchUser() {
-      this.loading = true
-      try {
-        const { data } = await getCurrentUser()
-        this.user = data
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
-        this.user = null
-      } finally {
-        this.loading = false
-      }
+    setToken(token) {
+      this.token = token
+      localStorage.setItem('token', token)
     },
-    setUser(user) {
-      this.user = user
+    setUserInfo(userInfo) {
+      this.userInfo = userInfo
     },
-    clearUser() {
-      this.user = null
+    logout() {
+      this.token = ''
+      this.userInfo = null
+      localStorage.removeItem('token')
     }
   }
 })

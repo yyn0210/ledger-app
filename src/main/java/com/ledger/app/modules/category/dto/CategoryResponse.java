@@ -52,9 +52,9 @@ public class CategoryResponse {
     private Integer sortOrder;
 
     /**
-     * 是否预置分类
+     * 是否系统预设分类
      */
-    private Integer isPreset;
+    private Integer isSystem;
 
     /**
      * 创建时间
@@ -83,7 +83,7 @@ public class CategoryResponse {
                 .icon(category.getIcon())
                 .type(category.getType())
                 .sortOrder(category.getSortOrder())
-                .isPreset(category.getIsPreset())
+                .isSystem(category.getIsSystem())
                 .createdAt(category.getCreatedAt())
                 .updatedAt(category.getUpdatedAt())
                 .build();

@@ -48,4 +48,15 @@ public interface NotificationRepository extends BaseMapper<Notification> {
      */
     @Select("SELECT * FROM user_notification_preference WHERE user_id = #{userId} AND book_id = #{bookId} AND deleted = 0 LIMIT 1")
     UserNotificationPreference findPreference(@Param("userId") Long userId, @Param("bookId") Long bookId);
+
+    /**
+     * 批量更新通知
+     */
+    default int updateBatchById(List<Notification> notifications) {
+        int count = 0;
+        for (Notification notification : notifications) {
+            count += updateById(notification);
+        }
+        return count;
+    }
 }

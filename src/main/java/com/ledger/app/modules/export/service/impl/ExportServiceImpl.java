@@ -85,6 +85,14 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional(readOnly = true)
     public ExportResponse getExportRecord(Long id, Long userId) {
+        ExportRecord record = getExportRecordEntity(id, userId);
+        return buildResponse(record);
+    }
+
+    /**
+     * 获取导出记录实体
+     */
+    private ExportRecord getExportRecordEntity(Long id, Long userId) {
         ExportRecord record = exportRecordRepository.selectById(id);
         if (record == null || record.getDeleted() != 0) {
             throw new BusinessException("导出记录不存在");
@@ -92,7 +100,7 @@ public class ExportServiceImpl implements ExportService {
         if (!record.getUserId().equals(userId)) {
             throw new BusinessException("无权访问该导出记录");
         }
-        return buildResponse(record);
+        return record;
     }
 
     @Override
@@ -110,7 +118,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional(readOnly = true)
     public Resource downloadFile(Long id, Long userId) {
-        ExportRecord record = getExportRecord(id, userId);
+        ExportRecord record = getExportRecordEntity(id, userId);
         if (record.getStatus() != ExportStatus.COMPLETED.getCode()) {
             throw new BusinessException("文件尚未生成完成");
         }
@@ -127,7 +135,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional
     public void deleteExportRecord(Long id, Long userId) {
-        ExportRecord record = getExportRecord(id, userId);
+        getExportRecordEntity(id, userId);
         exportRecordRepository.deleteById(id);
         log.info("删除导出记录：recordId={}", id);
     }
@@ -247,7 +255,7 @@ public class ExportServiceImpl implements ExportService {
             row.put("分类", tx.getCategoryId());
             row.put("金额", tx.getAmount());
             row.put("账户", tx.getAccountId());
-            row.put("备注", tx.getNote());
+            row.put("备注", tx.getDescription());
             data.add(row);
         }
 

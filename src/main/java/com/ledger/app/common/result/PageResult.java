@@ -53,14 +53,14 @@ public class PageResult<T> implements Serializable {
     public PageResult() {
     }
 
-    public PageResult(Long pageNum, Long pageSize, Long total, List<T> list) {
+    public PageResult(Long pageNum, Long pageSize, Long total, Long pages, List<T> list, Boolean hasPrevious, Boolean hasNext) {
         this.pageNum = pageNum;
         this.pageSize = pageSize;
         this.total = total;
+        this.pages = pages;
         this.list = list;
-        this.pages = (total + pageSize - 1) / pageSize;
-        this.hasPrevious = pageNum > 1;
-        this.hasNext = pageNum < this.pages;
+        this.hasPrevious = hasPrevious;
+        this.hasNext = hasNext;
     }
 
     /**

@@ -80,6 +80,24 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
     int countByBookId(@Param("bookId") Long bookId);
 
     /**
+     * 统计指定分类的支出
+     *
+     * @param bookId 账本 ID
+     * @param categoryId 分类 ID
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return 总支出
+     */
+    @Select("SELECT COALESCE(SUM(amount), 0) FROM transactions " +
+            "WHERE book_id = #{bookId} AND category_id = #{categoryId} AND type = 2 AND deleted = 0 " +
+            "AND transaction_date BETWEEN #{startDate} AND #{endDate}")
+    BigDecimal sumExpensesByBookIdAndCategoryIdAndDateRange(
+            @Param("bookId") Long bookId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    /**
      * 增加账户余额
      *
      * @param accountId 账户 ID

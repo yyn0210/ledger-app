@@ -50,6 +50,31 @@ public interface NotificationRepository extends BaseMapper<Notification> {
     UserNotificationPreference findPreference(@Param("userId") Long userId, @Param("bookId") Long bookId);
 
     /**
+     * 插入或更新用户通知偏好
+     */
+    @org.apache.ibatis.annotations.Insert("INSERT INTO user_notification_preference (user_id, book_id, email_enabled, sms_enabled, in_app_enabled, push_enabled, subscribed_types, deleted) VALUES (#{userId}, #{bookId}, #{emailEnabled}, #{smsEnabled}, #{inAppEnabled}, #{pushEnabled}, #{subscribedTypes}, #{deleted})")
+    int insertPreference(UserNotificationPreference preference);
+
+    @org.apache.ibatis.annotations.Update("UPDATE user_notification_preference SET email_enabled=#{emailEnabled}, sms_enabled=#{smsEnabled}, in_app_enabled=#{inAppEnabled}, push_enabled=#{pushEnabled} WHERE user_id=#{userId} AND book_id=#{bookId}")
+    int updatePreference(UserNotificationPreference preference);
+
+    /**
+     * 插入或更新通知模板
+     */
+    @org.apache.ibatis.annotations.Insert("INSERT INTO notification_template (name, code, type, content, title_template, biz_type, is_enabled, deleted) VALUES (#{name}, #{code}, #{type}, #{content}, #{titleTemplate}, #{bizType}, #{isEnabled}, #{deleted})")
+    @org.apache.ibatis.options(useGeneratedKeys = true, keyProperty = "id")
+    int insertTemplate(NotificationTemplate template);
+
+    @org.apache.ibatis.annotations.Update("UPDATE notification_template SET name=#{name}, type=#{type}, content=#{content}, title_template=#{titleTemplate}, biz_type=#{bizType}, is_enabled=#{isEnabled} WHERE id=#{id}")
+    int updateTemplate(NotificationTemplate template);
+
+    /**
+     * 删除通知模板
+     */
+    @org.apache.ibatis.annotations.Delete("DELETE FROM notification_template WHERE id=#{id}")
+    int deleteTemplate(Long id);
+
+    /**
      * 批量更新通知
      */
     default int updateBatchById(List<Notification> notifications) {

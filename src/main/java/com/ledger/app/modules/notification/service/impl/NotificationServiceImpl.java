@@ -161,13 +161,13 @@ public class NotificationServiceImpl implements NotificationService {
                     .pushEnabled(request.getPushEnabled() != null ? request.getPushEnabled() : true)
                     .deleted(0)
                     .build();
-            notificationRepository.insert(preference);
+            notificationRepository.insertPreference(preference);
         } else {
             if (request.getEmailEnabled() != null) preference.setEmailEnabled(request.getEmailEnabled());
             if (request.getSmsEnabled() != null) preference.setSmsEnabled(request.getSmsEnabled());
             if (request.getInAppEnabled() != null) preference.setInAppEnabled(request.getInAppEnabled());
             if (request.getPushEnabled() != null) preference.setPushEnabled(request.getPushEnabled());
-            notificationRepository.updateById(preference);
+            notificationRepository.updatePreference(preference);
         }
 
         log.info("更新通知偏好：userId={}, bookId={}", userId, bookId);
@@ -195,7 +195,7 @@ public class NotificationServiceImpl implements NotificationService {
             template.setTitleTemplate(request.getTitleTemplate());
             template.setBizType(request.getBizType());
             template.setIsEnabled(request.getIsEnabled());
-            notificationRepository.updateById(template);
+            notificationRepository.updateTemplate(template);
         } else {
             template = NotificationTemplate.builder()
                     .name(request.getName())
@@ -207,7 +207,7 @@ public class NotificationServiceImpl implements NotificationService {
                     .isEnabled(request.getIsEnabled())
                     .deleted(0)
                     .build();
-            notificationRepository.insert(template);
+            notificationRepository.insertTemplate(template);
         }
 
         log.info("保存通知模板：templateId={}, code={}", template.getId(), request.getCode());

@@ -67,11 +67,14 @@ public class PageResult<T> implements Serializable {
      * 从 MyBatis Plus Page 构建 PageResult
      */
     public static <T> PageResult<T> fromPage(com.baomidou.mybatisplus.extension.plugins.pagination.Page<T> page) {
-        return new PageResult<>(
-                page.getCurrent(),
-                page.getSize(),
-                page.getTotal(),
-                page.getRecords()
-        );
+        return PageResult.<T>builder()
+                .pageNum(page.getCurrent())
+                .pageSize(page.getSize())
+                .total(page.getTotal())
+                .pages(page.getPages())
+                .list(page.getRecords())
+                .hasPrevious(page.getCurrent() > 1)
+                .hasNext(page.getCurrent() < page.getPages())
+                .build();
     }
 }

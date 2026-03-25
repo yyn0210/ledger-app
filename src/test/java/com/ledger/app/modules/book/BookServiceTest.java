@@ -37,7 +37,6 @@ class BookServiceTest {
 
     @InjectMocks
     private BookService bookService;
-    private BookService bookService;
 
     private CreateBookRequest createRequest;
     private Book book;

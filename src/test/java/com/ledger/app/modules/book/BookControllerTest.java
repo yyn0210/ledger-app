@@ -4,7 +4,7 @@ import com.ledger.app.modules.book.controller.BookController;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
 import com.ledger.app.modules.book.dto.BookResponse;
 import com.ledger.app.modules.book.entity.Book;
-import com.ledger.app.modules.book.service.impl.BookService;
+import com.ledger.app.modules.book.service.BookService;
 import com.ledger.app.common.result.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,7 +1,7 @@
 package com.ledger.app.modules.statistics;
 
-import com.ledger.app.modules.statistics.dto.request.CategoryStatisticsResponse;
-import com.ledger.app.modules.statistics.dto.request.TrendResponse;
+import com.ledger.app.modules.statistics.dto.response.CategoryStatisticsResponse;
+import com.ledger.app.modules.statistics.dto.response.TrendResponse;
 import com.ledger.app.modules.statistics.service.impl.StatisticsServiceImpl;
 import com.ledger.app.modules.transaction.repository.TransactionRepository;
 import com.ledger.app.modules.category.repository.CategoryRepository;

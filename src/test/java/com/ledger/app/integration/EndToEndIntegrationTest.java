@@ -6,7 +6,7 @@ import com.ledger.app.modules.auth.dto.RegisterRequest;
 import com.ledger.app.modules.auth.dto.AuthResponse;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
 import com.ledger.app.modules.category.dto.request.CreateCategoryRequest;
-import com.ledger.app.modules.account.dto.response.CreateAccountRequest;
+import com.ledger.app.modules.account.dto.request.CreateAccountRequest;
 import com.ledger.app.modules.transaction.dto.request.CreateTransactionRequest;
 import com.ledger.app.modules.transaction.enums.TransactionType;
 import com.ledger.app.common.result.Result;

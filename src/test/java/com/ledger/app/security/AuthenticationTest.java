@@ -1,10 +1,6 @@
 package com.ledger.app.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ledger.app.modules.auth.dto.request.LoginRequest;
-import com.ledger.app.modules.auth.dto.request.RegisterRequest;
-import com.ledger.app.modules.auth.dto.response.AuthResponse;
-import com.ledger.app.modules.book.dto.request.CreateBookRequest;
 import com.ledger.app.modules.auth.dto.LoginRequest;
 import com.ledger.app.modules.auth.dto.RegisterRequest;
 import com.ledger.app.modules.auth.dto.AuthResponse;

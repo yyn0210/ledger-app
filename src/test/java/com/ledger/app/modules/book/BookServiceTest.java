@@ -1,10 +1,8 @@
 package com.ledger.app.modules.book;
 
-import com.ledger.app.modules.book.dto.request.CreateBookRequest;
-import com.ledger.app.modules.book.dto.response.BookResponse;
 import com.ledger.app.modules.book.entity.Book;
 import com.ledger.app.modules.book.repository.BookRepository;
-import com.ledger.app.modules.book.service.impl.BookServiceImpl;
+import com.ledger.app.modules.book.service.BookService;
 import com.ledger.app.modules.book.dto.CreateBookRequest;
 import com.ledger.app.modules.book.dto.BookResponse;
 import com.ledger.app.modules.book.entity.Book;
@@ -38,7 +36,7 @@ class BookServiceTest {
     private BookRepository bookRepository;
 
     @InjectMocks
-    private BookServiceImpl bookService;
+    private BookService bookService;
     private BookService bookService;
 
     private CreateBookRequest createRequest;

@@ -68,15 +68,10 @@ public class WebSocketConnectionHandler extends TextWebSocketHandler {
     private Long getUserIdFromSession(WebSocketSession session) {
         try {
             java.security.Principal principal = session.getPrincipal();
-            if (principal instanceof WebSocketAuthInterceptor.WebSocketUser) {
-                return ((WebSocketAuthInterceptor.WebSocketUser) principal).getUserId();
             if (principal instanceof com.ledger.app.modules.websocket.interceptor.WebSocketAuthInterceptor.WebSocketUser) {
                 return ((com.ledger.app.modules.websocket.interceptor.WebSocketAuthInterceptor.WebSocketUser) principal).getUserId();
             }
             // 从 attributes 获取
-            StompHeaderAccessor accessor = StompHeaderAccessor.wrap(
-                    new org.springframework.messaging.support.GenericMessage<>("")
-            );
             String userIdStr = (String) session.getAttributes().get("userId");
             if (userIdStr != null) {
                 return Long.parseLong(userIdStr);

@@ -91,16 +91,4 @@ public interface AccountRepository extends BaseMapper<Account> {
         Integer getType();
         BigDecimal getBalance();
     }
-
-    /**
-     * 增加账户余额
-     */
-    @Select("UPDATE accounts SET balance = balance + #{amount} WHERE id = #{id} AND deleted = 0")
-    int increaseBalance(@Param("id") Long id, @Param("amount") BigDecimal amount);
-
-    /**
-     * 减少账户余额
-     */
-    @Select("UPDATE accounts SET balance = balance - #{amount} WHERE id = #{id} AND deleted = 0")
-    int decreaseBalance(@Param("id") Long id, @Param("amount") BigDecimal amount);
 }

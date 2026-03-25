@@ -224,11 +224,6 @@ public class RecurringBillServiceImpl implements RecurringBillService {
                 .build();
 
         transactionService.create(txRequest, bill.getUserId());
-                .description(bill.getNote() != null ? bill.getNote() + " [周期账单]" : "[周期账单]")
-                .merchant(bill.getMerchant())
-                .build();
-
-        transactionService.createTransaction(bill.getUserId(), txRequest);
 
         // 更新执行信息
         bill.setLastExecutionDate(bill.getNextExecutionDate());

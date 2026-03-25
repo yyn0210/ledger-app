@@ -124,20 +124,4 @@ public interface TransactionRepository extends BaseMapper<Transaction> {
      * @return 影响行数
      */
     int insertBatch(@Param("list") List<Transaction> transactions);
-
-    /**
-     * 按分类统计支出
-     */
-    @Select("<script>" +
-            "SELECT COALESCE(SUM(amount), 0) FROM transactions " +
-            "WHERE book_id = #{bookId} AND deleted = 0 AND type = 2 " +
-            "<if test='categoryId != null'>AND category_id = #{categoryId}</if> " +
-            "<if test='startDate != null'>AND transaction_date &gt;= #{startDate}</if> " +
-            "<if test='endDate != null'>AND transaction_date &lt;= #{endDate}</if>" +
-            "</script>")
-    BigDecimal sumExpensesByBookIdAndCategoryIdAndDateRange(
-        @Param("bookId") Long bookId,
-        @Param("categoryId") Long categoryId,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate);
 }

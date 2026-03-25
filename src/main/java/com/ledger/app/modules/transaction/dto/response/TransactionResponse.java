@@ -101,7 +101,6 @@ public class TransactionResponse implements Serializable {
                 .tags(transaction.getTags() != null ? parseJsonArray(transaction.getTags()) : null)
                 .imageUrls(transaction.getImageUrls() != null ? parseJsonArray(transaction.getImageUrls()) : null)
                 .createdAt(transaction.getCreatedAt())
-                .updatedAt(transaction.getUpdatedAt())
                 .build();
     }
 

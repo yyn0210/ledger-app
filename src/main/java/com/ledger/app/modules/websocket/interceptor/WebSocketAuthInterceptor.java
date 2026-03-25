@@ -2,7 +2,6 @@ package com.ledger.app.modules.websocket.interceptor;
 
 import com.ledger.app.modules.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
  * @author Chisong
  * @since 2026-03-24
  */
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
@@ -31,7 +29,7 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             String authorization = accessor.getFirstNativeHeader("Authorization");
             
             if (authorization == null || !authorization.startsWith("Bearer ")) {
-                log.warn("WebSocket 连接被拒绝：缺少有效的认证 token");
+                System.out.println("WebSocket 连接被拒绝：缺少有效的认证 token");
                 return null; // 拒绝连接
             }
 
@@ -40,13 +38,13 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 Long userId = authService.getUserIdFromToken(token);
                 if (userId != null) {
                     accessor.setUser(new WebSocketUser(userId));
-                    log.info("WebSocket 用户认证成功：userId={}", userId);
+                    System.out.println("WebSocket 用户认证成功：userId=" + userId);
                 } else {
-                    log.warn("WebSocket 连接被拒绝：无效的 token");
+                    System.out.println("WebSocket 连接被拒绝：无效的 token");
                     return null;
                 }
             } catch (Exception e) {
-                log.warn("WebSocket 连接被拒绝：token 验证失败 - {}", e.getMessage());
+                System.out.println("WebSocket 连接被拒绝：token 验证失败 - " + e.getMessage());
                 return null;
             }
         }
@@ -57,10 +55,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
     /**
      * WebSocket 用户实现
      */
-    private static class WebSocketUser implements java.security.Principal {
-        private final Long userId;
-
-        WebSocketUser(Long userId) {
     public static class WebSocketUser implements java.security.Principal {
         private final Long userId;
 

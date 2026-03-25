@@ -110,13 +110,13 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional(readOnly = true)
     public Resource downloadFile(Long id, Long userId) {
-        ExportRecord record = getExportRecord(id, userId);
+        ExportResponse record = getExportRecord(id, userId);
         if (record.getStatus() != ExportStatus.COMPLETED.getCode()) {
             throw new BusinessException("文件尚未生成完成");
         }
         // 如果文件路径存在且以 data: 开头，说明是内联数据
-        if (record.getFilePath() != null && record.getFilePath().startsWith("data:")) {
-            String base64Data = record.getFilePath().substring(record.getFilePath().indexOf(",") + 1);
+        if (record.getDownloadUrl() != null && record.getDownloadUrl().startsWith("data:")) {
+            String base64Data = record.getDownloadUrl().substring(record.getDownloadUrl().indexOf(",") + 1);
             byte[] fileData = Base64.getDecoder().decode(base64Data);
             return new ByteArrayResource(fileData);
         }
@@ -127,7 +127,7 @@ public class ExportServiceImpl implements ExportService {
     @Override
     @Transactional
     public void deleteExportRecord(Long id, Long userId) {
-        ExportRecord record = getExportRecord(id, userId);
+        ExportResponse record = getExportRecord(id, userId);
         exportRecordRepository.deleteById(id);
         log.info("删除导出记录：recordId={}", id);
     }
@@ -247,7 +247,7 @@ public class ExportServiceImpl implements ExportService {
             row.put("分类", tx.getCategoryId());
             row.put("金额", tx.getAmount());
             row.put("账户", tx.getAccountId());
-            row.put("备注", tx.getNote());
+            row.put("备注", tx.getDescription());
             data.add(row);
         }
 

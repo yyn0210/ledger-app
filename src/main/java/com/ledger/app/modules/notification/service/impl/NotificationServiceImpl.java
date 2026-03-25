@@ -14,6 +14,8 @@ import com.ledger.app.modules.notification.entity.UserNotificationPreference;
 import com.ledger.app.modules.notification.enums.NotificationStatus;
 import com.ledger.app.modules.notification.enums.NotificationType;
 import com.ledger.app.modules.notification.repository.NotificationRepository;
+import com.ledger.app.modules.notification.repository.NotificationTemplateRepository;
+import com.ledger.app.modules.notification.repository.UserNotificationPreferenceRepository;
 import com.ledger.app.modules.notification.service.NotificationService;
 import com.ledger.app.modules.websocket.service.WebSocketMessageService;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,8 @@ import java.util.regex.Pattern;
 public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationTemplateRepository templateRepository;
+    private final UserNotificationPreferenceRepository preferenceRepository;
     private final WebSocketMessageService webSocketMessageService;
 
     private static final Pattern TEMPLATE_PATTERN = Pattern.compile("\\{(\\w+)\\}");
@@ -51,7 +55,10 @@ public class NotificationServiceImpl implements NotificationService {
         String content = request.getContent();
 
         if (request.getTemplateCode() != null) {
-            NotificationTemplate template = notificationRepository.findByCode(request.getTemplateCode());
+            NotificationTemplate template = templateRepository.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<NotificationTemplate>()
+                .eq(NotificationTemplate::getCode, request.getTemplateCode())
+        );
             if (template == null) {
                 throw new BusinessException("通知模板不存在：" + request.getTemplateCode());
             }
@@ -114,8 +121,8 @@ public class NotificationServiceImpl implements NotificationService {
         for (Notification notification : notifications) {
             notification.setStatus(NotificationStatus.READ.getCode());
             notification.setReadAt(LocalDateTime.now());
+            notificationRepository.updateById(notification);
         }
-        notificationRepository.updateBatchById(notifications);
         log.info("标记所有通知为已读：userId={}, count={}", userId, notifications.size());
     }
 
@@ -161,13 +168,13 @@ public class NotificationServiceImpl implements NotificationService {
                     .pushEnabled(request.getPushEnabled() != null ? request.getPushEnabled() : true)
                     .deleted(0)
                     .build();
-            notificationRepository.insert(preference);
+            preferenceRepository.insert(preference);
         } else {
             if (request.getEmailEnabled() != null) preference.setEmailEnabled(request.getEmailEnabled());
             if (request.getSmsEnabled() != null) preference.setSmsEnabled(request.getSmsEnabled());
             if (request.getInAppEnabled() != null) preference.setInAppEnabled(request.getInAppEnabled());
             if (request.getPushEnabled() != null) preference.setPushEnabled(request.getPushEnabled());
-            notificationRepository.updateById(preference);
+            preferenceRepository.updateById(preference);
         }
 
         log.info("更新通知偏好：userId={}, bookId={}", userId, bookId);
@@ -178,14 +185,17 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public TemplateResponse saveTemplate(SaveTemplateRequest request) {
         // 检查编码是否已存在
-        NotificationTemplate existing = notificationRepository.findByCode(request.getCode());
+        NotificationTemplate existing = templateRepository.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<NotificationTemplate>()
+                .eq(NotificationTemplate::getCode, request.getCode())
+        );
         if (existing != null && !existing.getId().equals(request.getId())) {
             throw new BusinessException("模板编码已存在：" + request.getCode());
         }
 
         NotificationTemplate template;
         if (request.getId() != null) {
-            template = notificationRepository.selectById(request.getId());
+            template = templateRepository.selectById(request.getId());
             if (template == null) {
                 throw new BusinessException("模板不存在：" + request.getId());
             }
@@ -195,7 +205,7 @@ public class NotificationServiceImpl implements NotificationService {
             template.setTitleTemplate(request.getTitleTemplate());
             template.setBizType(request.getBizType());
             template.setIsEnabled(request.getIsEnabled());
-            notificationRepository.updateById(template);
+            templateRepository.updateById(template);
         } else {
             template = NotificationTemplate.builder()
                     .name(request.getName())
@@ -207,7 +217,7 @@ public class NotificationServiceImpl implements NotificationService {
                     .isEnabled(request.getIsEnabled())
                     .deleted(0)
                     .build();
-            notificationRepository.insert(template);
+            templateRepository.insert(template);
         }
 
         log.info("保存通知模板：templateId={}, code={}", template.getId(), request.getCode());
@@ -217,14 +227,17 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public List<TemplateResponse> getTemplates() {
-        List<NotificationTemplate> templates = notificationRepository.findAll();
+        List<NotificationTemplate> templates = templateRepository.selectList(null);
         return templates.stream().map(this::buildTemplateResponse).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public TemplateResponse getTemplateByCode(String code) {
-        NotificationTemplate template = notificationRepository.findByCode(code);
+        NotificationTemplate template = templateRepository.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<NotificationTemplate>()
+                .eq(NotificationTemplate::getCode, code)
+        );
         if (template == null) {
             throw new BusinessException("通知模板不存在：" + code);
         }

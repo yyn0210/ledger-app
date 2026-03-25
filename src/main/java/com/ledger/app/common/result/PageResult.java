@@ -1,5 +1,6 @@
 package com.ledger.app.common.result;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -9,6 +10,7 @@ import java.util.List;
  * 分页响应结果
  */
 @Data
+@Builder
 public class PageResult<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;

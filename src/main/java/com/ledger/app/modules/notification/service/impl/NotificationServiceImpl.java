@@ -161,14 +161,12 @@ public class NotificationServiceImpl implements NotificationService {
                     .pushEnabled(request.getPushEnabled() != null ? request.getPushEnabled() : true)
                     .deleted(0)
                     .build();
-            notificationRepository.insert(preference);
             notificationRepository.insertPreference(preference);
         } else {
             if (request.getEmailEnabled() != null) preference.setEmailEnabled(request.getEmailEnabled());
             if (request.getSmsEnabled() != null) preference.setSmsEnabled(request.getSmsEnabled());
             if (request.getInAppEnabled() != null) preference.setInAppEnabled(request.getInAppEnabled());
             if (request.getPushEnabled() != null) preference.setPushEnabled(request.getPushEnabled());
-            notificationRepository.updateById(preference);
             notificationRepository.updatePreference(preference);
         }
 
@@ -187,7 +185,6 @@ public class NotificationServiceImpl implements NotificationService {
 
         NotificationTemplate template;
         if (request.getId() != null) {
-            template = notificationRepository.selectById(request.getId());
             template = notificationRepository.selectTemplateById(request.getId());
             if (template == null) {
                 throw new BusinessException("模板不存在：" + request.getId());
@@ -198,7 +195,6 @@ public class NotificationServiceImpl implements NotificationService {
             template.setTitleTemplate(request.getTitleTemplate());
             template.setBizType(request.getBizType());
             template.setIsEnabled(request.getIsEnabled());
-            notificationRepository.updateById(template);
             notificationRepository.updateTemplate(template);
         } else {
             template = NotificationTemplate.builder()
@@ -211,7 +207,6 @@ public class NotificationServiceImpl implements NotificationService {
                     .isEnabled(request.getIsEnabled())
                     .deleted(0)
                     .build();
-            notificationRepository.insert(template);
             notificationRepository.insertTemplate(template);
         }
 

@@ -183,7 +183,6 @@ public class SavingsGoalServiceImpl implements SavingsGoalService {
     @Override
     @Transactional(readOnly = true)
     public SavingsSummary getSummary(Long bookId, Long userId) {
-        BigDecimal totalSaved = savingsGoalRepository.sumTotalSaved(bookId);
         BigDecimal totalSaved = savingsGoalRepository.sumTotalSaved(bookId, userId);
         List<SavingsGoal> allGoals = savingsGoalRepository.findByBookIdAndUserId(bookId, userId);
 

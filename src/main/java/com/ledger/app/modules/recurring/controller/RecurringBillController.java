@@ -122,13 +122,6 @@ public class RecurringBillController {
                 .total(responsePage.getTotal())
                 .page((int) responsePage.getCurrent())
                 .size((int) responsePage.getSize())
-                .pageNum(responsePage.getCurrent())
-                .pageSize(responsePage.getSize())
-                .total(responsePage.getTotal())
-                .pages(responsePage.getPages())
-                .list(responsePage.getRecords())
-                .hasPrevious(responsePage.getCurrent() > 1)
-                .hasNext(responsePage.getCurrent() < responsePage.getPages())
                 .build();
 
         return Result.success(result);

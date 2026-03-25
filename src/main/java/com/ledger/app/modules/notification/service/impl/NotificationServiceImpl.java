@@ -185,7 +185,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         NotificationTemplate template;
         if (request.getId() != null) {
-            template = notificationRepository.selectById(request.getId());
+            template = notificationRepository.selectTemplateById(request.getId());
             if (template == null) {
                 throw new BusinessException("模板不存在：" + request.getId());
             }

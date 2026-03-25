@@ -59,6 +59,12 @@ public interface NotificationRepository extends BaseMapper<Notification> {
     int updatePreference(UserNotificationPreference preference);
 
     /**
+     * 根据 ID 查询通知模板
+     */
+    @Select("SELECT * FROM notification_template WHERE id = #{id} AND deleted = 0")
+    NotificationTemplate selectTemplateById(Long id);
+
+    /**
      * 插入或更新通知模板
      */
     @org.apache.ibatis.annotations.Insert("INSERT INTO notification_template (name, code, type, content, title_template, biz_type, is_enabled, deleted) VALUES (#{name}, #{code}, #{type}, #{content}, #{titleTemplate}, #{bizType}, #{isEnabled}, #{deleted})")

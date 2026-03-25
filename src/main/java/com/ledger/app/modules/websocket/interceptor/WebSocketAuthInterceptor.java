@@ -57,10 +57,10 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
     /**
      * WebSocket 用户实现
      */
-    private static class WebSocketUser implements java.security.Principal {
+    public static class WebSocketUser implements java.security.Principal {
         private final Long userId;
 
-        WebSocketUser(Long userId) {
+        public WebSocketUser(Long userId) {
             this.userId = userId;
         }
 

@@ -1,11 +1,11 @@
 package com.ledger.app.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ledger.app.modules.auth.dto.request.LoginRequest;
-import com.ledger.app.modules.auth.dto.request.RegisterRequest;
-import com.ledger.app.modules.auth.dto.response.AuthResponse;
-import com.ledger.app.modules.book.dto.request.CreateBookRequest;
-import com.ledger.app.modules.book.dto.response.BookResponse;
+import com.ledger.app.modules.auth.dto.LoginRequest;
+import com.ledger.app.modules.auth.dto.RegisterRequest;
+import com.ledger.app.modules.auth.dto.AuthResponse;
+import com.ledger.app.modules.book.dto.CreateBookRequest;
+import com.ledger.app.modules.book.dto.BookResponse;
 import com.ledger.app.common.result.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

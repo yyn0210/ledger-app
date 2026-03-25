@@ -1,6 +1,6 @@
 package com.ledger.app.modules.transaction;
 
-import com.ledger.app.modules.transaction.dto.request.CreateTransactionRequest;
+import com.ledger.app.modules.transaction.dto.CreateTransactionRequest;
 import com.ledger.app.modules.transaction.entity.Transaction;
 import com.ledger.app.modules.transaction.enums.TransactionType;
 import com.ledger.app.modules.transaction.repository.TransactionRepository;

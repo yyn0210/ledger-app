@@ -1,44 +1,42 @@
 package com.ledger.app.modules.statistics.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * 分类统计响应
- *
- * @author Chisong
- * @since 2026-03-24
+ * 分类统计响应 DTO
  */
 @Data
-@Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "分类统计响应")
-public class CategoryStatisticsResponse implements Serializable {
+public class CategoryStatisticsResponse {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @Schema(description = "分类 ID", example = "1")
+    /**
+     * 分类 ID
+     */
     private Long categoryId;
 
-    @Schema(description = "分类名称", example = "餐饮")
+    /**
+     * 分类名称
+     */
     private String categoryName;
 
-    @Schema(description = "图标", example = "🍜")
-    private String icon;
+    /**
+     * 分类图标
+     */
+    private String categoryIcon;
 
-    @Schema(description = "金额", example = "2000.00")
+    /**
+     * 总金额
+     */
     private BigDecimal amount;
 
-    @Schema(description = "百分比", example = "40.00")
+    /**
+     * 百分比
+     */
     private BigDecimal percentage;
 
-    @Schema(description = "交易笔数", example = "30")
-    private Long transactionCount;
+    /**
+     * 交易笔数
+     */
+    private Integer transactionCount;
 }

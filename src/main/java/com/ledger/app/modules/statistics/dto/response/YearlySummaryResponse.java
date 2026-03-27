@@ -1,83 +1,78 @@
 package com.ledger.app.modules.statistics.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * 年度统计概览响应
- *
- * @author Chisong
- * @since 2026-03-24
+ * 年度概览响应 DTO
  */
 @Data
-@Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "年度统计概览响应")
-public class YearlySummaryResponse implements Serializable {
+public class YearlySummaryResponse {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @Schema(description = "年份", example = "2026")
+    /**
+     * 年份
+     */
     private Integer year;
 
-    @Schema(description = "总收入", example = "120000.00")
+    /**
+     * 总收入
+     */
     private BigDecimal totalIncome;
 
-    @Schema(description = "总支出", example = "80000.00")
+    /**
+     * 总支出
+     */
     private BigDecimal totalExpense;
 
-    @Schema(description = "结余", example = "40000.00")
+    /**
+     * 结余
+     */
     private BigDecimal surplus;
 
-    @Schema(description = "支出笔数", example = "500")
-    private Long expenseCount;
+    /**
+     * 支出笔数
+     */
+    private Integer expenseCount;
 
-    @Schema(description = "收入笔数", example = "50")
-    private Long incomeCount;
+    /**
+     * 收入笔数
+     */
+    private Integer incomeCount;
 
-    @Schema(description = "月均收入", example = "10000.00")
-    private BigDecimal monthlyAverageIncome;
+    /**
+     * 月均统计
+     */
+    private MonthlyAverage monthlyAverage;
 
-    @Schema(description = "月均支出", example = "6666.67")
-    private BigDecimal monthlyAverageExpense;
-
-    @Schema(description = "月均结余", example = "3333.33")
-    private BigDecimal monthlyAverageSurplus;
-
-    @Schema(description = "最高支出分类")
+    /**
+     * 最高支出分类
+     */
     private TopCategory topExpenseCategory;
 
-    @Schema(description = "最高收入分类")
+    /**
+     * 最高收入分类
+     */
     private TopCategory topIncomeCategory;
 
     /**
-     * 最高分类
+     * 月均统计 DTO
      */
     @Data
-    @Builder
-    @Schema(description = "最高分类")
-    public static class TopCategory implements Serializable {
+    public static class MonthlyAverage {
+        private BigDecimal income;
+        private BigDecimal expense;
+        private BigDecimal surplus;
+    }
 
-        @Serial
-        private static final long serialVersionUID = 1L;
-
-        @Schema(description = "分类 ID", example = "1")
+    /**
+     * 最高分类 DTO
+     */
+    @Data
+    public static class TopCategory {
         private Long categoryId;
-
-        @Schema(description = "分类名称", example = "餐饮")
         private String categoryName;
-
-        @Schema(description = "金额", example = "24000.00")
         private BigDecimal amount;
-
-        @Schema(description = "百分比", example = "30.00")
         private BigDecimal percentage;
     }
 }

@@ -2,58 +2,60 @@ package com.ledger.app.modules.statistics.service;
 
 import com.ledger.app.modules.statistics.dto.response.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * 统计服务接口
- *
- * @author Chisong
- * @since 2026-03-24
  */
 public interface StatisticsService {
 
     /**
      * 支出统计（按分类分组）
      *
-     * @param bookId 账本 ID
+     * @param bookId    账本 ID
+     * @param userId    用户 ID
      * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return 分类统计列表
+     * @param endDate   结束日期
+     * @return 分类统计汇总
      */
-    List<CategoryStatisticsResponse> getExpenseByCategory(Long bookId, String startDate, String endDate);
+    CategoryStatisticsSummaryResponse getExpenseByCategory(Long bookId, Long userId, LocalDate startDate, LocalDate endDate);
 
     /**
      * 收入统计（按分类分组）
      *
-     * @param bookId 账本 ID
+     * @param bookId    账本 ID
+     * @param userId    用户 ID
      * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return 分类统计列表
+     * @param endDate   结束日期
+     * @return 分类统计汇总
      */
-    List<CategoryStatisticsResponse> getIncomeByCategory(Long bookId, String startDate, String endDate);
+    CategoryStatisticsSummaryResponse getIncomeByCategory(Long bookId, Long userId, LocalDate startDate, LocalDate endDate);
 
     /**
      * 收支趋势分析
      *
-     * @param bookId 账本 ID
-     * @param trendType 趋势类型
+     * @param bookId    账本 ID
+     * @param userId    用户 ID
+     * @param type      趋势类型
      * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return 趋势列表
+     * @param endDate   结束日期
+     * @return 趋势分析汇总
      */
-    List<TrendResponse> getTrend(Long bookId, String trendType, String startDate, String endDate);
+    TrendSummaryResponse getTrend(Long bookId, Long userId, String type, LocalDate startDate, LocalDate endDate);
 
     /**
      * 收支排行榜
      *
-     * @param bookId 账本 ID
-     * @param rankingType 排行榜类型
-     * @param limit 返回数量
+     * @param bookId    账本 ID
+     * @param userId    用户 ID
+     * @param type      排行榜类型
+     * @param limit     返回数量
      * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return 排行榜列表
+     * @param endDate   结束日期
+     * @return 排行榜汇总
      */
-    List<RankingResponse> getRanking(Long bookId, String rankingType, Integer limit, String startDate, String endDate);
+    RankingSummaryResponse getRanking(Long bookId, Long userId, String type, Integer limit, LocalDate startDate, LocalDate endDate);
 
     /**
      * 资产汇总统计
@@ -69,8 +71,8 @@ public interface StatisticsService {
      *
      * @param bookId 账本 ID
      * @param userId 用户 ID
-     * @param year 年份
-     * @param month 月份
+     * @param year   年份
+     * @param month  月份
      * @return 月度概览
      */
     MonthlySummaryResponse getMonthlySummary(Long bookId, Long userId, Integer year, Integer month);
@@ -80,7 +82,7 @@ public interface StatisticsService {
      *
      * @param bookId 账本 ID
      * @param userId 用户 ID
-     * @param year 年份
+     * @param year   年份
      * @return 年度概览
      */
     YearlySummaryResponse getYearlySummary(Long bookId, Long userId, Integer year);
@@ -90,8 +92,8 @@ public interface StatisticsService {
      *
      * @param bookId 账本 ID
      * @param userId 用户 ID
-     * @param year 年份
-     * @param month 月份
+     * @param year   年份
+     * @param month  月份
      * @return 预算执行对比
      */
     BudgetExecutionResponse getBudgetExecution(Long bookId, Long userId, Integer year, Integer month);

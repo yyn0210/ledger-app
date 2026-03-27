@@ -1,162 +1,169 @@
 package com.ledger.app.modules.statistics.controller;
 
 import com.ledger.app.common.result.Result;
-import com.ledger.app.modules.auth.service.AuthService;
 import com.ledger.app.modules.statistics.dto.response.*;
 import com.ledger.app.modules.statistics.service.StatisticsService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 
 /**
- * 统计控制器
- *
- * @author Chisong
- * @since 2026-03-24
+ * 统计分析控制器
  */
-@Tag(name = "统计分析", description = "收支统计/趋势分析/排行榜/资产汇总")
-@SecurityRequirement(name = "BearerAuth")
+@Slf4j
 @RestController
 @RequestMapping("/api/statistics")
 @RequiredArgsConstructor
 public class StatisticsController {
 
     private final StatisticsService statisticsService;
-    private final AuthService authService;
-
-    /**
-     * 获取当前用户 ID
-     */
-    private Long getCurrentUserId(HttpServletRequest request) {
-        String token = getTokenFromRequest(request);
-        return authService.getUserIdFromToken(token);
-    }
-
-    /**
-     * 从请求头获取 Token
-     */
-    private String getTokenFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
 
     /**
      * 支出统计（按分类分组）
+     * GET /api/statistics/expense-by-category?bookId={bookId}&startDate=2026-03-01&endDate=2026-03-31
      */
-    @Operation(summary = "支出统计", description = "按分类分组统计支出")
     @GetMapping("/expense-by-category")
-    public Result<List<CategoryStatisticsResponse>> getExpenseByCategory(
-            @RequestParam Long bookId,
-            @RequestParam String startDate,
-            @RequestParam String endDate) {
-        List<CategoryStatisticsResponse> result = statisticsService.getExpenseByCategory(bookId, startDate, endDate);
+    public Result<CategoryStatisticsSummaryResponse> getExpenseByCategory(
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam @NotNull(message = "开始日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam @NotNull(message = "结束日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("支出统计（按分类），bookId: {}, startDate: {}, endDate: {}", bookId, startDate, endDate);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        CategoryStatisticsSummaryResponse result = statisticsService.getExpenseByCategory(bookId, effectiveUserId, startDate, endDate);
         return Result.success(result);
     }
 
     /**
      * 收入统计（按分类分组）
+     * GET /api/statistics/income-by-category?bookId={bookId}&startDate=2026-03-01&endDate=2026-03-31
      */
-    @Operation(summary = "收入统计", description = "按分类分组统计收入")
     @GetMapping("/income-by-category")
-    public Result<List<CategoryStatisticsResponse>> getIncomeByCategory(
-            @RequestParam Long bookId,
-            @RequestParam String startDate,
-            @RequestParam String endDate) {
-        List<CategoryStatisticsResponse> result = statisticsService.getIncomeByCategory(bookId, startDate, endDate);
+    public Result<CategoryStatisticsSummaryResponse> getIncomeByCategory(
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam @NotNull(message = "开始日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam @NotNull(message = "结束日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("收入统计（按分类），bookId: {}, startDate: {}, endDate: {}", bookId, startDate, endDate);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        CategoryStatisticsSummaryResponse result = statisticsService.getIncomeByCategory(bookId, effectiveUserId, startDate, endDate);
         return Result.success(result);
     }
 
     /**
      * 收支趋势分析
+     * GET /api/statistics/trend?bookId={bookId}&type=monthly&startDate=2026-01-01&endDate=2026-03-31
      */
-    @Operation(summary = "收支趋势分析", description = "按日/周/月/年统计收支趋势")
     @GetMapping("/trend")
-    public Result<List<TrendResponse>> getTrend(
-            @RequestParam Long bookId,
-            @RequestParam(defaultValue = "monthly") String type,
-            @RequestParam String startDate,
-            @RequestParam String endDate) {
-        List<TrendResponse> result = statisticsService.getTrend(bookId, type, startDate, endDate);
+    public Result<TrendSummaryResponse> getTrend(
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam(value = "type", defaultValue = "monthly") String type,
+            @RequestParam @NotNull(message = "开始日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam @NotNull(message = "结束日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("收支趋势分析，bookId: {}, type: {}", bookId, type);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        TrendSummaryResponse result = statisticsService.getTrend(bookId, effectiveUserId, type, startDate, endDate);
         return Result.success(result);
     }
 
     /**
      * 收支排行榜
+     * GET /api/statistics/ranking?bookId={bookId}&type=expense&limit=10&startDate=2026-03-01&endDate=2026-03-31
      */
-    @Operation(summary = "收支排行榜", description = "支出/收入 TOP10 排行榜")
     @GetMapping("/ranking")
-    public Result<List<RankingResponse>> getRanking(
-            @RequestParam Long bookId,
-            @RequestParam(defaultValue = "expense") String type,
-            @RequestParam(defaultValue = "10") Integer limit,
-            @RequestParam String startDate,
-            @RequestParam String endDate) {
-        List<RankingResponse> result = statisticsService.getRanking(bookId, type, limit, startDate, endDate);
+    public Result<RankingSummaryResponse> getRanking(
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam(value = "type", defaultValue = "expense") String type,
+            @RequestParam(value = "limit", defaultValue = "10") Integer limit,
+            @RequestParam @NotNull(message = "开始日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam @NotNull(message = "结束日期不能为空") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("收支排行榜，bookId: {}, type: {}, limit: {}", bookId, type, limit);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        RankingSummaryResponse result = statisticsService.getRanking(bookId, effectiveUserId, type, limit, startDate, endDate);
         return Result.success(result);
     }
 
     /**
      * 资产汇总统计
+     * GET /api/statistics/assets?bookId={bookId}
      */
-    @Operation(summary = "资产汇总统计", description = "总资产/总负债/净资产/按账户类型分组")
     @GetMapping("/assets")
     public Result<AssetsSummaryResponse> getAssetsSummary(
-            @RequestParam Long bookId,
-            HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        AssetsSummaryResponse result = statisticsService.getAssetsSummary(bookId, userId);
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("资产汇总统计，bookId: {}", bookId);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        AssetsSummaryResponse result = statisticsService.getAssetsSummary(bookId, effectiveUserId);
         return Result.success(result);
     }
 
     /**
      * 月度收支概览
+     * GET /api/statistics/monthly-summary?bookId={bookId}&year=2026&month=3
      */
-    @Operation(summary = "月度收支概览", description = "月度收支汇总 + 预算执行对比")
     @GetMapping("/monthly-summary")
     public Result<MonthlySummaryResponse> getMonthlySummary(
-            @RequestParam Long bookId,
-            @RequestParam Integer year,
-            @RequestParam Integer month,
-            HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        MonthlySummaryResponse result = statisticsService.getMonthlySummary(bookId, userId, year, month);
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam @NotNull(message = "年份不能为空") Integer year,
+            @RequestParam @NotNull(message = "月份不能为空") Integer month,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("月度收支概览，bookId: {}, year: {}, month: {}", bookId, year, month);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        MonthlySummaryResponse result = statisticsService.getMonthlySummary(bookId, effectiveUserId, year, month);
         return Result.success(result);
     }
 
     /**
      * 年度统计概览
+     * GET /api/statistics/yearly-summary?bookId={bookId}&year=2026
      */
-    @Operation(summary = "年度统计概览", description = "全年收支汇总 + 月均统计")
     @GetMapping("/yearly-summary")
     public Result<YearlySummaryResponse> getYearlySummary(
-            @RequestParam Long bookId,
-            @RequestParam Integer year,
-            HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        YearlySummaryResponse result = statisticsService.getYearlySummary(bookId, userId, year);
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam @NotNull(message = "年份不能为空") Integer year,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("年度统计概览，bookId: {}, year: {}", bookId, year);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        YearlySummaryResponse result = statisticsService.getYearlySummary(bookId, effectiveUserId, year);
         return Result.success(result);
     }
 
     /**
      * 预算执行对比
+     * GET /api/statistics/budget-execution?bookId={bookId}&year=2026&month=3
      */
-    @Operation(summary = "预算执行对比", description = "各预算项执行情况对比")
     @GetMapping("/budget-execution")
     public Result<BudgetExecutionResponse> getBudgetExecution(
-            @RequestParam Long bookId,
-            @RequestParam Integer year,
-            @RequestParam Integer month,
-            HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        BudgetExecutionResponse result = statisticsService.getBudgetExecution(bookId, userId, year, month);
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam @NotNull(message = "年份不能为空") Integer year,
+            @RequestParam @NotNull(message = "月份不能为空") Integer month,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("预算执行对比，bookId: {}, year: {}, month: {}", bookId, year, month);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        BudgetExecutionResponse result = statisticsService.getBudgetExecution(bookId, effectiveUserId, year, month);
         return Result.success(result);
     }
 }

@@ -15,7 +15,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -26,10 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 统计服务实现
- *
- * @author Chisong
- * @since 2026-03-24
+ * 统计服务实现类
  */
 @Slf4j
 @Service
@@ -37,83 +33,150 @@ import java.util.stream.Collectors;
 public class StatisticsServiceImpl implements StatisticsService {
 
     private final TransactionRepository transactionRepository;
-    private final CategoryRepository categoryRepository;
     private final AccountRepository accountRepository;
+    private final CategoryRepository categoryRepository;
     private final BudgetRepository budgetRepository;
 
-    private static final DateTimeFormatter MONTH_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM");
-    private static final DateTimeFormatter YEAR_FORMAT = DateTimeFormatter.ofPattern("yyyy");
-
     @Override
-    @Transactional(readOnly = true)
-    public List<CategoryStatisticsResponse> getExpenseByCategory(Long bookId, String startDate, String endDate) {
-        return getCategoryStatistics(bookId, 2, startDate, endDate); // type=2 支出
+    public CategoryStatisticsSummaryResponse getExpenseByCategory(Long bookId, Long userId, LocalDate startDate, LocalDate endDate) {
+        log.info("支出统计（按分类），bookId: {}, startDate: {}, endDate: {}", bookId, startDate, endDate);
+
+        return getCategoryStatistics(bookId, startDate, endDate, 2); // 2 = 支出
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<CategoryStatisticsResponse> getIncomeByCategory(Long bookId, String startDate, String endDate) {
-        return getCategoryStatistics(bookId, 1, startDate, endDate); // type=1 收入
+    public CategoryStatisticsSummaryResponse getIncomeByCategory(Long bookId, Long userId, LocalDate startDate, LocalDate endDate) {
+        log.info("收入统计（按分类），bookId: {}, startDate: {}, endDate: {}", bookId, startDate, endDate);
+
+        return getCategoryStatistics(bookId, startDate, endDate, 1); // 1 = 收入
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<TrendResponse> getTrend(Long bookId, String trendType, String startDate, String endDate) {
-        List<Transaction> transactions = queryTransactions(bookId, startDate, endDate);
+    public TrendSummaryResponse getTrend(Long bookId, Long userId, String type, LocalDate startDate, LocalDate endDate) {
+        log.info("收支趋势分析，bookId: {}, type: {}, startDate: {}, endDate: {}", bookId, type, startDate, endDate);
+
+        TrendSummaryResponse response = new TrendSummaryResponse();
+        List<TrendResponse> trend = new ArrayList<>();
 
         // 按周期分组统计
-        Map<String, Map<Integer, BigDecimal>> periodAmounts = new LinkedHashMap<>();
+        LambdaQueryWrapper<Transaction> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Transaction::getBookId, bookId)
+                .eq(Transaction::getDeleted, 0)
+                .ge(Transaction::getTransactionDate, startDate)
+                .le(Transaction::getTransactionDate, endDate);
 
-        for (Transaction tx : transactions) {
-            String period = getPeriod(tx.getTransactionDate(), trendType);
-            periodAmounts.computeIfAbsent(period, k -> new HashMap<>());
+        List<Transaction> transactions = transactionRepository.selectList(wrapper);
 
-            Map<Integer, BigDecimal> amounts = periodAmounts.get(period);
-            amounts.merge(tx.getType(), tx.getAmount(), BigDecimal::add);
+        // 按周期分组
+        Map<String, List<Transaction>> grouped = groupByPeriod(transactions, type);
+
+        for (Map.Entry<String, List<Transaction>> entry : grouped.entrySet()) {
+            TrendResponse trendResp = new TrendResponse();
+            trendResp.setPeriod(entry.getKey());
+
+            BigDecimal income = BigDecimal.ZERO;
+            BigDecimal expense = BigDecimal.ZERO;
+
+            for (Transaction tx : entry.getValue()) {
+                if (tx.getType() == 1) { // 收入
+                    income = income.add(tx.getAmount());
+                } else if (tx.getType() == 2) { // 支出
+                    expense = expense.add(tx.getAmount());
+                }
+            }
+
+            trendResp.setIncome(income);
+            trendResp.setExpense(expense);
+            trendResp.setSurplus(income.subtract(expense));
+            trend.add(trendResp);
         }
 
-        // 构建响应
-        return periodAmounts.entrySet().stream()
-                .map(entry -> {
-                    Map<Integer, BigDecimal> amounts = entry.getValue();
-                    BigDecimal income = amounts.getOrDefault(1, BigDecimal.ZERO);
-                    BigDecimal expense = amounts.getOrDefault(2, BigDecimal.ZERO);
-                    return TrendResponse.builder()
-                            .period(entry.getKey())
-                            .income(income)
-                            .expense(expense)
-                            .surplus(income.subtract(expense))
-                            .build();
-                })
-                .collect(Collectors.toList());
+        // 按周期排序
+        trend.sort(Comparator.comparing(TrendResponse::getPeriod));
+        response.setTrend(trend);
+
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<RankingResponse> getRanking(Long bookId, String rankingType, Integer limit, String startDate, String endDate) {
-        int type = "expense".equals(rankingType) ? 2 : 1;
-        List<CategoryStatisticsResponse> stats = getCategoryStatistics(bookId, type, startDate, endDate);
+    public RankingSummaryResponse getRanking(Long bookId, Long userId, String type, Integer limit, LocalDate startDate, LocalDate endDate) {
+        log.info("收支排行榜，bookId: {}, type: {}, limit: {}", bookId, type, limit);
 
-        // 排序并取 TOP N
-        return stats.stream()
-                .sorted(Comparator.comparing(CategoryStatisticsResponse::getAmount).reversed())
-                .limit(limit != null ? limit : 10)
-                .map((s, index) -> RankingResponse.builder()
-                        .rank(index + 1)
-                        .categoryId(s.getCategoryId())
-                        .categoryName(s.getCategoryName())
-                        .icon(s.getIcon())
-                        .amount(s.getAmount())
-                        .transactionCount(s.getTransactionCount())
-                        .percentage(s.getPercentage())
-                        .build())
-                .collect(Collectors.toList());
+        RankingSummaryResponse response = new RankingSummaryResponse();
+        response.setType(type);
+
+        int transactionType = "expense".equals(type) ? 2 : 1;
+
+        // 查询按分类汇总
+        LambdaQueryWrapper<Transaction> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Transaction::getBookId, bookId)
+                .eq(Transaction::getType, transactionType)
+                .eq(Transaction::getDeleted, 0)
+                .ge(Transaction::getTransactionDate, startDate)
+                .le(Transaction::getTransactionDate, endDate)
+                .groupBy(Transaction::getCategoryId);
+
+        List<Transaction> transactions = transactionRepository.selectList(wrapper);
+
+        // 按分类汇总
+        Map<Long, List<Transaction>> byCategory = transactions.stream()
+                .collect(Collectors.groupingBy(Transaction::getCategoryId));
+
+        List<RankingResponse> ranking = new ArrayList<>();
+        BigDecimal total = byCategory.values().stream()
+                .flatMap(List::stream)
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int rank = 1;
+        for (Map.Entry<Long, List<Transaction>> entry : byCategory.entrySet()) {
+            RankingResponse item = new RankingResponse();
+            item.setRank(rank++);
+            item.setCategoryId(entry.getKey());
+
+            BigDecimal amount = entry.getValue().stream()
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            item.setAmount(amount);
+            item.setTransactionCount(entry.getValue().size());
+            item.setPercentage(total.compareTo(BigDecimal.ZERO) > 0
+                    ? amount.multiply(new BigDecimal("100")).divide(total, 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO);
+
+            // 获取分类名称
+            if (entry.getKey() != null) {
+                Category category = categoryRepository.selectById(entry.getKey());
+                if (category != null) {
+                    item.setCategoryName(category.getName());
+                }
+            }
+
+            ranking.add(item);
+        }
+
+        // 按金额降序排序并取 TOP N
+        ranking.sort(Comparator.comparing(RankingResponse::getAmount).reversed());
+        if (limit != null && limit > 0) {
+            ranking = ranking.stream().limit(limit).collect(Collectors.toList());
+        }
+
+        // 重新设置排名
+        for (int i = 0; i < ranking.size(); i++) {
+            ranking.get(i).setRank(i + 1);
+        }
+
+        response.setRanking(ranking);
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public AssetsSummaryResponse getAssetsSummary(Long bookId, Long userId) {
-        List<Account> accounts = accountRepository.findByBookId(bookId);
+        log.info("资产汇总统计，bookId: {}", bookId);
+
+        AssetsSummaryResponse response = new AssetsSummaryResponse();
+
+        List<Account> accounts = accountRepository.selectByBookIdAndUserId(bookId, userId);
 
         BigDecimal totalAssets = BigDecimal.ZERO;
         BigDecimal totalLiabilities = BigDecimal.ZERO;
@@ -121,366 +184,393 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         for (Account account : accounts) {
             BigDecimal balance = account.getBalance() != null ? account.getBalance() : BigDecimal.ZERO;
-            Integer type = account.getType();
 
             // 信用卡等负债账户
-            if (type != null && type == AccountType.CREDIT_CARD.getCode()) {
+            if (account.getType() != null && account.getType() == 3) { // 3 = 信用卡
                 totalLiabilities = totalLiabilities.add(balance.abs());
             } else {
                 totalAssets = totalAssets.add(balance);
             }
 
-            byType.merge(type, balance, BigDecimal::add);
+            byType.merge(account.getType(), balance, BigDecimal::add);
         }
 
-        List<AssetsSummaryResponse.AccountTypeBalance> byAccountType = byType.entrySet().stream()
-                .map(entry -> {
-                    String typeName = getTypeName(entry.getKey());
-                    return AssetsSummaryResponse.AccountTypeBalance.builder()
-                            .type(entry.getKey())
-                            .typeName(typeName)
-                            .balance(entry.getValue())
-                            .build();
-                })
-                .collect(Collectors.toList());
+        response.setTotalAssets(totalAssets);
+        response.setTotalLiabilities(totalLiabilities);
+        response.setNetAssets(totalAssets.subtract(totalLiabilities));
+        response.setAccountCount(accounts.size());
 
-        return AssetsSummaryResponse.builder()
-                .totalAssets(totalAssets)
-                .totalLiabilities(totalLiabilities)
-                .netAssets(totalAssets.subtract(totalLiabilities))
-                .accountCount(accounts.size())
-                .byAccountType(byAccountType)
-                .build();
+        // 按账户类型分组
+        List<AssetsSummaryResponse.AccountTypeBalance> byAccountType = new ArrayList<>();
+        for (Map.Entry<Integer, BigDecimal> entry : byType.entrySet()) {
+            AssetsSummaryResponse.AccountTypeBalance item = new AssetsSummaryResponse.AccountTypeBalance();
+            item.setType(entry.getKey());
+            item.setBalance(entry.getValue());
+
+            // 获取类型名称
+            try {
+                AccountType accountType = AccountType.fromCode(entry.getKey());
+                item.setTypeName(accountType.getName());
+            } catch (IllegalArgumentException e) {
+                item.setTypeName("未知");
+            }
+
+            byAccountType.add(item);
+        }
+
+        response.setByAccountType(byAccountType);
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public MonthlySummaryResponse getMonthlySummary(Long bookId, Long userId, Integer year, Integer month) {
-        YearMonth yearMonth = YearMonth.of(year, month);
-        String startDate = yearMonth.atDay(1).toString();
-        String endDate = yearMonth.atEndOfMonth().toString();
+        log.info("月度收支概览，bookId: {}, year: {}, month: {}", bookId, year, month);
 
-        // 统计收支
-        List<CategoryStatisticsResponse> expenseStats = getExpenseByCategory(bookId, startDate, endDate);
-        List<CategoryStatisticsResponse> incomeStats = getIncomeByCategory(bookId, startDate, endDate);
+        MonthlySummaryResponse response = new MonthlySummaryResponse();
+        response.setYear(year);
+        response.setMonth(month);
 
-        BigDecimal totalExpense = expenseStats.stream()
-                .map(CategoryStatisticsResponse::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
 
-        BigDecimal totalIncome = incomeStats.stream()
-                .map(CategoryStatisticsResponse::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 查询该月交易
+        LambdaQueryWrapper<Transaction> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Transaction::getBookId, bookId)
+                .eq(Transaction::getDeleted, 0)
+                .ge(Transaction::getTransactionDate, startDate)
+                .le(Transaction::getTransactionDate, endDate);
 
-        // 最高支出分类
-        MonthlySummaryResponse.TopCategory topCategory = expenseStats.stream()
-                .max(Comparator.comparing(CategoryStatisticsResponse::getAmount))
-                .map(s -> MonthlySummaryResponse.TopCategory.builder()
-                        .categoryId(s.getCategoryId())
-                        .categoryName(s.getCategoryName())
-                        .amount(s.getAmount())
-                        .percentage(s.getPercentage())
-                        .build())
-                .orElse(null);
+        List<Transaction> transactions = transactionRepository.selectList(wrapper);
+
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalExpense = BigDecimal.ZERO;
+        int expenseCount = 0;
+        int incomeCount = 0;
+        Map<Long, BigDecimal> byCategory = new HashMap<>();
+
+        for (Transaction tx : transactions) {
+            if (tx.getType() == 1) { // 收入
+                totalIncome = totalIncome.add(tx.getAmount());
+                incomeCount++;
+            } else if (tx.getType() == 2) { // 支出
+                totalExpense = totalExpense.add(tx.getAmount());
+                expenseCount++;
+                byCategory.merge(tx.getCategoryId(), tx.getAmount(), BigDecimal::add);
+            }
+        }
+
+        response.setTotalIncome(totalIncome);
+        response.setTotalExpense(totalExpense);
+        response.setSurplus(totalIncome.subtract(totalExpense));
+        response.setExpenseCount(expenseCount);
+        response.setIncomeCount(incomeCount);
+
+        // 计算日均支出
+        int days = endDate.getDayOfMonth();
+        response.setDailyAverage(totalExpense.divide(new BigDecimal(days), 2, RoundingMode.HALF_UP));
+
+        // 找出最高支出分类
+        if (!byCategory.isEmpty()) {
+            Map.Entry<Long, BigDecimal> top = byCategory.entrySet().stream()
+                    .max(Comparator.comparing(Map.Entry::getValue))
+                    .orElse(null);
+
+            if (top != null) {
+                MonthlySummaryResponse.TopCategory topCategory = new MonthlySummaryResponse.TopCategory();
+                topCategory.setCategoryId(top.getKey());
+                topCategory.setAmount(top.getValue());
+                topCategory.setPercentage(totalExpense.compareTo(BigDecimal.ZERO) > 0
+                        ? top.getValue().multiply(new BigDecimal("100")).divide(totalExpense, 2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO);
+
+                if (top.getKey() != null) {
+                    Category category = categoryRepository.selectById(top.getKey());
+                    if (category != null) {
+                        topCategory.setCategoryName(category.getName());
+                    }
+                }
+
+                response.setTopCategory(topCategory);
+            }
+        }
 
         // 预算执行情况
-        MonthlySummaryResponse.BudgetExecution budgetExecution = getMonthlyBudgetExecution(bookId, year, month);
+        MonthlySummaryResponse.BudgetExecution budgetExec = new MonthlySummaryResponse.BudgetExecution();
+        List<Budget> budgets = budgetRepository.selectByBookIdAndUserId(bookId, userId);
+        BigDecimal totalBudget = budgets.stream()
+                .map(Budget::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        budgetExec.setTotalBudget(totalBudget);
+        budgetExec.setSpentAmount(totalExpense);
+        budgetExec.setProgress(totalBudget.compareTo(BigDecimal.ZERO) > 0
+                ? totalExpense.multiply(new BigDecimal("100")).divide(totalBudget, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO);
+        budgetExec.setRemaining(totalBudget.subtract(totalExpense));
+        response.setBudgetExecution(budgetExec);
 
-        // 日均支出
-        long daysInMonth = yearMonth.lengthOfMonth();
-        BigDecimal dailyAverage = totalExpense.divide(new BigDecimal(daysInMonth), 2, RoundingMode.HALF_UP);
-
-        return MonthlySummaryResponse.builder()
-                .year(year)
-                .month(month)
-                .totalIncome(totalIncome)
-                .totalExpense(totalExpense)
-                .surplus(totalIncome.subtract(totalExpense))
-                .expenseCount((long) expenseStats.stream()
-                        .mapToLong(s -> s.getTransactionCount() != null ? s.getTransactionCount() : 0)
-                        .sum())
-                .incomeCount((long) incomeStats.stream()
-                        .mapToLong(s -> s.getTransactionCount() != null ? s.getTransactionCount() : 0)
-                        .sum())
-                .dailyAverage(dailyAverage)
-                .topCategory(topCategory)
-                .budgetExecution(budgetExecution)
-                .build();
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public YearlySummaryResponse getYearlySummary(Long bookId, Long userId, Integer year) {
-        String startDate = year + "-01-01";
-        String endDate = year + "-12-31";
+        log.info("年度统计概览，bookId: {}, year: {}", bookId, year);
 
-        // 统计收支
-        List<CategoryStatisticsResponse> expenseStats = getExpenseByCategory(bookId, startDate, endDate);
-        List<CategoryStatisticsResponse> incomeStats = getIncomeByCategory(bookId, startDate, endDate);
+        YearlySummaryResponse response = new YearlySummaryResponse();
+        response.setYear(year);
 
-        BigDecimal totalExpense = expenseStats.stream()
-                .map(CategoryStatisticsResponse::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        LocalDate startDate = LocalDate.of(year, 1, 1);
+        LocalDate endDate = LocalDate.of(year, 12, 31);
 
-        BigDecimal totalIncome = incomeStats.stream()
-                .map(CategoryStatisticsResponse::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 查询该年交易
+        LambdaQueryWrapper<Transaction> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Transaction::getBookId, bookId)
+                .eq(Transaction::getDeleted, 0)
+                .ge(Transaction::getTransactionDate, startDate)
+                .le(Transaction::getTransactionDate, endDate);
 
-        BigDecimal monthlyAverageIncome = totalIncome.divide(new BigDecimal(12), 2, RoundingMode.HALF_UP);
-        BigDecimal monthlyAverageExpense = totalExpense.divide(new BigDecimal(12), 2, RoundingMode.HALF_UP);
-        BigDecimal monthlyAverageSurplus = monthlyAverageIncome.subtract(monthlyAverageExpense);
+        List<Transaction> transactions = transactionRepository.selectList(wrapper);
+
+        BigDecimal totalIncome = BigDecimal.ZERO;
+        BigDecimal totalExpense = BigDecimal.ZERO;
+        int expenseCount = 0;
+        int incomeCount = 0;
+        Map<Long, BigDecimal> expenseByCategory = new HashMap<>();
+        Map<Long, BigDecimal> incomeByCategory = new HashMap<>();
+
+        for (Transaction tx : transactions) {
+            if (tx.getType() == 1) { // 收入
+                totalIncome = totalIncome.add(tx.getAmount());
+                incomeCount++;
+                incomeByCategory.merge(tx.getCategoryId(), tx.getAmount(), BigDecimal::add);
+            } else if (tx.getType() == 2) { // 支出
+                totalExpense = totalExpense.add(tx.getAmount());
+                expenseCount++;
+                expenseByCategory.merge(tx.getCategoryId(), tx.getAmount(), BigDecimal::add);
+            }
+        }
+
+        response.setTotalIncome(totalIncome);
+        response.setTotalExpense(totalExpense);
+        response.setSurplus(totalIncome.subtract(totalExpense));
+        response.setExpenseCount(expenseCount);
+        response.setIncomeCount(incomeCount);
+
+        // 月均统计
+        YearlySummaryResponse.MonthlyAverage monthlyAvg = new YearlySummaryResponse.MonthlyAverage();
+        monthlyAvg.setIncome(totalIncome.divide(new BigDecimal(12), 2, RoundingMode.HALF_UP));
+        monthlyAvg.setExpense(totalExpense.divide(new BigDecimal(12), 2, RoundingMode.HALF_UP));
+        monthlyAvg.setSurplus(monthlyAvg.getIncome().subtract(monthlyAvg.getExpense()));
+        response.setMonthlyAverage(monthlyAvg);
 
         // 最高支出分类
-        YearlySummaryResponse.TopCategory topExpenseCategory = expenseStats.stream()
-                .max(Comparator.comparing(CategoryStatisticsResponse::getAmount))
-                .map(s -> YearlySummaryResponse.TopCategory.builder()
-                        .categoryId(s.getCategoryId())
-                        .categoryName(s.getCategoryName())
-                        .amount(s.getAmount())
-                        .percentage(s.getPercentage())
-                        .build())
-                .orElse(null);
+        if (!expenseByCategory.isEmpty()) {
+            response.setTopExpenseCategory(findTopCategory(expenseByCategory, totalExpense));
+        }
 
         // 最高收入分类
-        YearlySummaryResponse.TopCategory topIncomeCategory = incomeStats.stream()
-                .max(Comparator.comparing(CategoryStatisticsResponse::getAmount))
-                .map(s -> YearlySummaryResponse.TopCategory.builder()
-                        .categoryId(s.getCategoryId())
-                        .categoryName(s.getCategoryName())
-                        .amount(s.getAmount())
-                        .percentage(s.getPercentage())
-                        .build())
-                .orElse(null);
+        if (!incomeByCategory.isEmpty()) {
+            response.setTopIncomeCategory(findTopCategory(incomeByCategory, totalIncome));
+        }
 
-        return YearlySummaryResponse.builder()
-                .year(year)
-                .totalIncome(totalIncome)
-                .totalExpense(totalExpense)
-                .surplus(totalIncome.subtract(totalExpense))
-                .expenseCount((long) expenseStats.stream()
-                        .mapToLong(s -> s.getTransactionCount() != null ? s.getTransactionCount() : 0)
-                        .sum())
-                .incomeCount((long) incomeStats.stream()
-                        .mapToLong(s -> s.getTransactionCount() != null ? s.getTransactionCount() : 0)
-                        .sum())
-                .monthlyAverageIncome(monthlyAverageIncome)
-                .monthlyAverageExpense(monthlyAverageExpense)
-                .monthlyAverageSurplus(monthlyAverageSurplus)
-                .topExpenseCategory(topExpenseCategory)
-                .topIncomeCategory(topIncomeCategory)
-                .build();
+        return response;
     }
 
     @Override
-    @Transactional(readOnly = true)
     public BudgetExecutionResponse getBudgetExecution(Long bookId, Long userId, Integer year, Integer month) {
-        YearMonth yearMonth = YearMonth.of(year, month);
-        LocalDate startDate = yearMonth.atDay(1);
-        LocalDate endDate = yearMonth.atEndOfMonth();
+        log.info("预算执行对比，bookId: {}, year: {}, month: {}", bookId, year, month);
+
+        BudgetExecutionResponse response = new BudgetExecutionResponse();
+        response.setYear(year);
+        response.setMonth(month);
+
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
 
         // 获取该月所有预算
-        List<Budget> budgets = budgetRepository.findByBookId(bookId, null, null);
+        List<Budget> budgets = budgetRepository.selectByBookIdAndUserId(bookId, userId);
 
-        List<BudgetExecutionResponse.BudgetItem> items = budgets.stream()
-                .map(budget -> {
-                    BigDecimal spentAmount = transactionRepository.sumExpensesByBookIdAndCategoryIdAndDateRange(
-                            bookId,
-                            budget.getCategoryId(),
-                            startDate,
-                            endDate
-                    );
-                    spentAmount = spentAmount != null ? spentAmount : BigDecimal.ZERO;
+        List<BudgetExecutionResponse.BudgetExecutionItem> items = new ArrayList<>();
+        BigDecimal totalBudget = BigDecimal.ZERO;
+        BigDecimal totalSpent = BigDecimal.ZERO;
 
-                    BigDecimal remaining = budget.getAmount().subtract(spentAmount);
-                    BigDecimal progress = spentAmount.multiply(new BigDecimal("100"))
-                            .divide(budget.getAmount(), 2, RoundingMode.HALF_UP);
+        for (Budget budget : budgets) {
+            BudgetExecutionResponse.BudgetExecutionItem item = new BudgetExecutionResponse.BudgetExecutionItem();
+            item.setBudgetId(budget.getId());
+            item.setCategoryId(budget.getCategoryId());
+            item.setBudgetAmount(budget.getAmount());
 
-                    String status = "active";
-                    if (progress.compareTo(new BigDecimal("100")) > 0) {
-                        status = "overdue";
-                    } else if (LocalDate.now().isAfter(budget.getEndDate())) {
-                        status = "completed";
-                    }
+            // 统计实际支出
+            BigDecimal spentAmount = calculateSpentAmount(bookId, budget.getCategoryId(), startDate, endDate);
+            item.setSpentAmount(spentAmount);
+            item.setRemaining(budget.getAmount().subtract(spentAmount));
+            item.setProgress(budget.getAmount().compareTo(BigDecimal.ZERO) > 0
+                    ? spentAmount.multiply(new BigDecimal("100")).divide(budget.getAmount(), 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO);
 
-                    return BudgetExecutionResponse.BudgetItem.builder()
-                            .budgetId(budget.getId())
-                            .categoryId(budget.getCategoryId())
-                            .categoryName(getCategoryName(budget.getCategoryId()))
-                            .budgetAmount(budget.getAmount())
-                            .spentAmount(spentAmount)
-                            .remaining(remaining)
-                            .progress(progress)
-                            .status(status)
-                            .build();
-                })
-                .collect(Collectors.toList());
+            // 确定状态
+            if (item.getProgress().compareTo(new BigDecimal("100")) > 0) {
+                item.setStatus("overdue");
+            } else if (LocalDate.now().isAfter(budget.getEndDate())) {
+                item.setStatus("completed");
+            } else {
+                item.setStatus("active");
+            }
 
-        BigDecimal totalBudget = items.stream()
-                .map(BudgetExecutionResponse.BudgetItem::getBudgetAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            // 获取分类名称
+            if (budget.getCategoryId() != null) {
+                Category category = categoryRepository.selectById(budget.getCategoryId());
+                if (category != null) {
+                    item.setCategoryName(category.getName());
+                }
+            }
 
-        BigDecimal totalSpent = items.stream()
-                .map(BudgetExecutionResponse.BudgetItem::getSpentAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            items.add(item);
+            totalBudget = totalBudget.add(budget.getAmount());
+            totalSpent = totalSpent.add(spentAmount);
+        }
 
-        BigDecimal overallProgress = totalBudget.compareTo(BigDecimal.ZERO) > 0
+        response.setBudgets(items);
+        response.setTotalBudget(totalBudget);
+        response.setTotalSpent(totalSpent);
+        response.setOverallProgress(totalBudget.compareTo(BigDecimal.ZERO) > 0
                 ? totalSpent.multiply(new BigDecimal("100")).divide(totalBudget, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+                : BigDecimal.ZERO);
 
-        return BudgetExecutionResponse.builder()
-                .year(year)
-                .month(month)
-                .budgets(items)
-                .totalBudget(totalBudget)
-                .totalSpent(totalSpent)
-                .overallProgress(overallProgress)
-                .build();
+        return response;
     }
 
     /**
      * 获取分类统计
      */
-    private List<CategoryStatisticsResponse> getCategoryStatistics(Long bookId, Integer type, String startDate, String endDate) {
-        List<Transaction> transactions = queryTransactions(bookId, startDate, endDate);
+    private CategoryStatisticsSummaryResponse getCategoryStatistics(Long bookId, LocalDate startDate, LocalDate endDate, Integer type) {
+        CategoryStatisticsSummaryResponse response = new CategoryStatisticsSummaryResponse();
 
-        // 按分类分组
+        // 查询交易
+        LambdaQueryWrapper<Transaction> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Transaction::getBookId, bookId)
+                .eq(Transaction::getType, type)
+                .eq(Transaction::getDeleted, 0)
+                .ge(Transaction::getTransactionDate, startDate)
+                .le(Transaction::getTransactionDate, endDate);
+
+        List<Transaction> transactions = transactionRepository.selectList(wrapper);
+
+        // 按分类汇总
         Map<Long, List<Transaction>> byCategory = transactions.stream()
-                .filter(tx -> tx.getType().equals(type))
                 .collect(Collectors.groupingBy(Transaction::getCategoryId));
 
-        // 计算总额
-        BigDecimal totalAmount = byCategory.values().stream()
+        List<CategoryStatisticsResponse> categories = new ArrayList<>();
+        BigDecimal total = byCategory.values().stream()
                 .flatMap(List::stream)
                 .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 构建响应
-        return byCategory.entrySet().stream()
-                .map(entry -> {
-                    Long categoryId = entry.getKey();
-                    List<Transaction> txs = entry.getValue();
+        for (Map.Entry<Long, List<Transaction>> entry : byCategory.entrySet()) {
+            CategoryStatisticsResponse item = new CategoryStatisticsResponse();
+            item.setCategoryId(entry.getKey());
 
-                    BigDecimal amount = txs.stream()
-                            .map(Transaction::getAmount)
-                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal amount = entry.getValue().stream()
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                    BigDecimal percentage = totalAmount.compareTo(BigDecimal.ZERO) > 0
-                            ? amount.multiply(new BigDecimal("100")).divide(totalAmount, 2, RoundingMode.HALF_UP)
-                            : BigDecimal.ZERO;
+            item.setAmount(amount);
+            item.setTransactionCount(entry.getValue().size());
+            item.setPercentage(total.compareTo(BigDecimal.ZERO) > 0
+                    ? amount.multiply(new BigDecimal("100")).divide(total, 2, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO);
 
-                    Category category = categoryRepository.selectById(categoryId);
+            // 获取分类信息
+            if (entry.getKey() != null) {
+                Category category = categoryRepository.selectById(entry.getKey());
+                if (category != null) {
+                    item.setCategoryName(category.getName());
+                    item.setCategoryIcon(category.getIcon());
+                }
+            }
 
-                    return CategoryStatisticsResponse.builder()
-                            .categoryId(categoryId)
-                            .categoryName(category != null ? category.getName() : "未知分类")
-                            .icon(category != null ? category.getIcon() : null)
-                            .amount(amount)
-                            .percentage(percentage)
-                            .transactionCount((long) txs.size())
-                            .build();
-                })
-                .collect(Collectors.toList());
+            categories.add(item);
+        }
+
+        // 按金额降序排序
+        categories.sort(Comparator.comparing(CategoryStatisticsResponse::getAmount).reversed());
+        response.setCategories(categories);
+        response.setTotalAmount(total);
+
+        return response;
     }
 
     /**
-     * 查询交易记录
+     * 按周期分组
      */
-    private List<Transaction> queryTransactions(Long bookId, String startDate, String endDate) {
-        LambdaQueryWrapper<Transaction> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Transaction::getBookId, bookId)
-                .eq(Transaction::getDeleted, 0);
-
-        if (startDate != null && endDate != null) {
-            wrapper.ge(Transaction::getTransactionDate, LocalDate.parse(startDate))
-                    .le(Transaction::getTransactionDate, LocalDate.parse(endDate));
-        }
-
-        return transactionRepository.selectList(wrapper);
-    }
-
-    /**
-     * 获取周期字符串
-     */
-    private String getPeriod(LocalDate date, String trendType) {
-        if (trendType == null) {
-            trendType = "monthly";
-        }
-
-        switch (trendType) {
+    private Map<String, List<Transaction>> groupByPeriod(List<Transaction> transactions, String type) {
+        DateTimeFormatter formatter;
+        switch (type) {
             case "daily":
-                return date.toString();
+                formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                break;
             case "weekly":
-                // 返回周一的日期
-                return date.minusDays(date.getDayOfWeek().getValue() - 1).toString();
+                formatter = DateTimeFormatter.ofPattern("yyyy-'W'ww");
+                break;
             case "yearly":
-                return date.format(YEAR_FORMAT);
+                formatter = DateTimeFormatter.ofPattern("yyyy");
+                break;
             case "monthly":
             default:
-                return date.format(MONTH_FORMAT);
+                formatter = DateTimeFormatter.ofPattern("yyyy-MM");
+                break;
         }
+
+        return transactions.stream()
+                .collect(Collectors.groupingBy(tx -> tx.getTransactionDate().format(formatter)));
     }
 
     /**
-     * 获取账户类型名称
+     * 计算指定分类的支出
      */
-    private String getTypeName(Integer type) {
-        if (type == null) {
-            return "未知";
+    private BigDecimal calculateSpentAmount(Long bookId, Long categoryId, LocalDate startDate, LocalDate endDate) {
+        LambdaQueryWrapper<Transaction> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Transaction::getBookId, bookId)
+                .eq(Transaction::getType, 2) // 支出
+                .eq(Transaction::getDeleted, 0)
+                .ge(Transaction::getTransactionDate, startDate)
+                .le(Transaction::getTransactionDate, endDate);
+
+        if (categoryId != null) {
+            wrapper.eq(Transaction::getCategoryId, categoryId);
         }
-        try {
-            AccountType accountType = AccountType.fromCode(type);
-            return accountType.getName();
-        } catch (IllegalArgumentException e) {
-            return "未知";
-        }
-    }
 
-    /**
-     * 获取分类名称
-     */
-    private String getCategoryName(Long categoryId) {
-        if (categoryId == null) {
-            return "总预算";
-        }
-        Category category = categoryRepository.selectById(categoryId);
-        return category != null ? category.getName() : "未知分类";
-    }
-
-    /**
-     * 获取月度预算执行
-     */
-    private MonthlySummaryResponse.BudgetExecution getMonthlyBudgetExecution(Long bookId, Integer year, Integer month) {
-        YearMonth yearMonth = YearMonth.of(year, month);
-        LocalDate startDate = yearMonth.atDay(1);
-        LocalDate endDate = yearMonth.atEndOfMonth();
-
-        List<Budget> budgets = budgetRepository.findByBookId(bookId, "monthly", null);
-
-        BigDecimal totalBudget = budgets.stream()
-                .map(Budget::getAmount)
+        List<Transaction> transactions = transactionRepository.selectList(wrapper);
+        return transactions.stream()
+                .map(Transaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
 
-        BigDecimal totalSpent = budgets.stream()
-                .map(budget -> {
-                    BigDecimal spent = transactionRepository.sumExpensesByBookIdAndCategoryIdAndDateRange(
-                            bookId,
-                            budget.getCategoryId(),
-                            startDate,
-                            endDate
-                    );
-                    return spent != null ? spent : BigDecimal.ZERO;
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    /**
+     * 找出最高分类
+     */
+    private YearlySummaryResponse.TopCategory findTopCategory(Map<Long, BigDecimal> byCategory, BigDecimal total) {
+        Map.Entry<Long, BigDecimal> top = byCategory.entrySet().stream()
+                .max(Comparator.comparing(Map.Entry::getValue))
+                .orElse(null);
 
-        BigDecimal progress = totalBudget.compareTo(BigDecimal.ZERO) > 0
-                ? totalSpent.multiply(new BigDecimal("100")).divide(totalBudget, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        if (top == null) {
+            return null;
+        }
 
-        return MonthlySummaryResponse.BudgetExecution.builder()
-                .totalBudget(totalBudget)
-                .spentAmount(totalSpent)
-                .progress(progress)
-                .remaining(totalBudget.subtract(totalSpent))
-                .build();
+        YearlySummaryResponse.TopCategory result = new YearlySummaryResponse.TopCategory();
+        result.setCategoryId(top.getKey());
+        result.setAmount(top.getValue());
+        result.setPercentage(total.compareTo(BigDecimal.ZERO) > 0
+                ? top.getValue().multiply(new BigDecimal("100")).divide(total, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO);
+
+        if (top.getKey() != null) {
+            Category category = categoryRepository.selectById(top.getKey());
+            if (category != null) {
+                result.setCategoryName(category.getName());
+            }
+        }
+
+        return result;
     }
 }

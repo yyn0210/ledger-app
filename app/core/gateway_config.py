@@ -13,6 +13,7 @@ class ModelProvider(str, Enum):
     DEEPSEEK = "deepseek"   # 深度求索
     IFLYTEK = "iflytek"     # 科大讯飞
     GLM = "glm"             # 智谱 AI
+    LOCAL = "local"         # 本地模型
 
 
 class QualityTier(str, Enum):
@@ -173,6 +174,19 @@ DEFAULT_MODEL_CONFIGS = {
             cost_per_1k_output=0.005,
             quality_tier=QualityTier.PREMIUM,
             capabilities=["nlp", "reasoning", "high-accuracy"]
+        ),
+        # Local models (fallback, ~0 cost)
+        ModelConfig(
+            provider=ModelProvider.LOCAL,
+            model_name="qwen2.5-0.5b",
+            api_key_env="",
+            weight=1,
+            timeout=60,
+            max_retries=1,
+            cost_per_1k_input=0.0,
+            cost_per_1k_output=0.0,
+            quality_tier=QualityTier.ECONOMY,
+            capabilities=["nlp", "local", "offline", "cpu"]
         ),
     ],
 }

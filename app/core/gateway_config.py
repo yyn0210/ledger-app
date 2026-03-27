@@ -15,6 +15,13 @@ class ModelProvider(str, Enum):
     GLM = "glm"             # 智谱 AI
 
 
+class QualityTier(str, Enum):
+    """质量等级"""
+    PREMIUM = "premium"       # 最高质量 (高成本)
+    STANDARD = "standard"     # 标准质量 (中等成本)
+    ECONOMY = "economy"       # 经济质量 (低成本)
+
+
 class ModelConfig(BaseModel):
     """单个模型配置"""
     provider: ModelProvider
@@ -24,6 +31,20 @@ class ModelConfig(BaseModel):
     timeout: int = Field(default=30, ge=5)  # 超时时间 (秒)
     max_retries: int = Field(default=3, ge=0)  # 最大重试次数
     enabled: bool = True  # 是否启用
+    
+    # 成本配置 (每 1000 tokens 的价格，单位：元)
+    cost_per_1k_input: float = Field(default=0.0, ge=0)  # 输入价格
+    cost_per_1k_output: float = Field(default=0.0, ge=0)  # 输出价格
+    
+    # 质量等级
+    quality_tier: QualityTier = QualityTier.STANDARD
+    
+    # 能力标签 (用于智能路由)
+    capabilities: List[str] = []  # e.g., ["ocr", "multilingual", "fast"]
+    
+    # 速率限制
+    rpm: int = Field(default=100, ge=1)  # 每分钟请求数限制
+    tpm: int = Field(default=10000, ge=1)  # 每分钟 token 数限制
 
 
 class GatewayConfig(BaseModel):
@@ -61,7 +82,11 @@ DEFAULT_MODEL_CONFIGS = {
             api_key_env="DASHSCOPE_API_KEY",
             weight=3,
             timeout=60,
-            max_retries=3
+            max_retries=3,
+            cost_per_1k_input=0.02,
+            cost_per_1k_output=0.02,
+            quality_tier=QualityTier.PREMIUM,
+            capabilities=["ocr", "high-accuracy", "receipt"]
         ),
         ModelConfig(
             provider=ModelProvider.DEEPSEEK,
@@ -69,7 +94,23 @@ DEFAULT_MODEL_CONFIGS = {
             api_key_env="DEEPSEEK_API_KEY",
             weight=2,
             timeout=60,
-            max_retries=3
+            max_retries=3,
+            cost_per_1k_input=0.01,
+            cost_per_1k_output=0.01,
+            quality_tier=QualityTier.STANDARD,
+            capabilities=["ocr", "multilingual"]
+        ),
+        ModelConfig(
+            provider=ModelProvider.QWEN,
+            model_name="qwen-vl-plus",
+            api_key_env="DASHSCOPE_API_KEY",
+            weight=1,
+            timeout=60,
+            max_retries=3,
+            cost_per_1k_input=0.005,
+            cost_per_1k_output=0.005,
+            quality_tier=QualityTier.ECONOMY,
+            capabilities=["ocr", "fast"]
         ),
     ],
     "stt": [
@@ -79,7 +120,10 @@ DEFAULT_MODEL_CONFIGS = {
             api_key_env="IFLYTEK_API_KEY",
             weight=2,
             timeout=120,
-            max_retries=3
+            max_retries=3,
+            cost_per_1k_input=0.008,
+            quality_tier=QualityTier.PREMIUM,
+            capabilities=["stt", "chinese", "high-accuracy"]
         ),
         ModelConfig(
             provider=ModelProvider.QWEN,
@@ -87,7 +131,10 @@ DEFAULT_MODEL_CONFIGS = {
             api_key_env="DASHSCOPE_API_KEY",
             weight=1,
             timeout=120,
-            max_retries=3
+            max_retries=3,
+            cost_per_1k_input=0.005,
+            quality_tier=QualityTier.STANDARD,
+            capabilities=["stt", "multilingual"]
         ),
     ],
     "nlp": [
@@ -97,7 +144,11 @@ DEFAULT_MODEL_CONFIGS = {
             api_key_env="DASHSCOPE_API_KEY",
             weight=2,
             timeout=30,
-            max_retries=3
+            max_retries=3,
+            cost_per_1k_input=0.002,
+            cost_per_1k_output=0.002,
+            quality_tier=QualityTier.ECONOMY,
+            capabilities=["nlp", "fast", "chat"]
         ),
         ModelConfig(
             provider=ModelProvider.DEEPSEEK,
@@ -105,7 +156,11 @@ DEFAULT_MODEL_CONFIGS = {
             api_key_env="DEEPSEEK_API_KEY",
             weight=2,
             timeout=30,
-            max_retries=3
+            max_retries=3,
+            cost_per_1k_input=0.001,
+            cost_per_1k_output=0.002,
+            quality_tier=QualityTier.STANDARD,
+            capabilities=["nlp", "reasoning", "chat"]
         ),
         ModelConfig(
             provider=ModelProvider.GLM,
@@ -113,7 +168,11 @@ DEFAULT_MODEL_CONFIGS = {
             api_key_env="GLM_API_KEY",
             weight=1,
             timeout=30,
-            max_retries=3
+            max_retries=3,
+            cost_per_1k_input=0.005,
+            cost_per_1k_output=0.005,
+            quality_tier=QualityTier.PREMIUM,
+            capabilities=["nlp", "reasoning", "high-accuracy"]
         ),
     ],
 }

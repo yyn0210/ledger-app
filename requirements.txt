@@ -1,0 +1,28 @@
+# FastAPI
+fastapi==0.109.0
+uvicorn==0.27.0
+python-multipart==0.0.6
+
+# AI SDKs
+dashscope==1.14.1  # 阿里百炼 Qwen-VL
+iflytek_tts==1.0.0  # 讯飞星火 STT
+deepseek-sdk==1.0.0  # DeepSeek
+
+# Storage & Cache
+redis==5.0.1
+minio==7.2.0
+
+# Utils
+pydantic==2.5.3
+loguru==0.7.2
+aiofiles==23.2.1
+python-dotenv==1.0.0
+uuid6==2024.1.12
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
+
+# Documentation
+python-jose==3.3.0

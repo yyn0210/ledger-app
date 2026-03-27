@@ -5,6 +5,7 @@ import com.ledger.app.modules.recurring.entity.RecurringBill;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 

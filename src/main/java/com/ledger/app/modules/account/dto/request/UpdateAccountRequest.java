@@ -2,7 +2,7 @@ package com.ledger.app.modules.account.dto.request;
 
 import lombok.Data;
 
-import javax.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
 
 /**

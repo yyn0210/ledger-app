@@ -1,78 +1,84 @@
 package com.ledger.app.modules.budget.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * 预算汇总统计响应
- *
- * @author Chisong
- * @since 2026-03-24
+ * 预算汇总统计响应 DTO
  */
 @Data
-@Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(description = "预算汇总统计响应")
-public class BudgetSummaryResponse implements Serializable {
+public class BudgetSummaryResponse {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
-
-    @Schema(description = "总预算金额", example = "10000.00")
+    /**
+     * 总预算金额
+     */
     private BigDecimal totalBudget;
 
-    @Schema(description = "总支出金额", example = "7500.00")
+    /**
+     * 总支出金额
+     */
     private BigDecimal totalSpent;
 
-    @Schema(description = "总体执行进度（百分比）", example = "75.00")
+    /**
+     * 总体进度百分比
+     */
     private BigDecimal overallProgress;
 
-    @Schema(description = "预算数量", example = "5")
+    /**
+     * 预算数量
+     */
     private Integer budgetCount;
 
-    @Schema(description = "超支预算数量", example = "1")
+    /**
+     * 超支预算数量
+     */
     private Integer overBudgetCount;
 
-    @Schema(description = "预警预算数量", example = "2")
+    /**
+     * 预警预算数量
+     */
     private Integer warningCount;
 
-    @Schema(description = "按分类分组统计")
+    /**
+     * 按分类分组的预算
+     */
     private List<CategoryBudget> byCategory;
 
     /**
-     * 分类预算统计
+     * 分类预算 DTO
      */
     @Data
-    @Builder
-    @Schema(description = "分类预算统计")
-    public static class CategoryBudget implements Serializable {
-
-        @Serial
-        private static final long serialVersionUID = 1L;
-
-        @Schema(description = "分类 ID", example = "1")
+    public static class CategoryBudget {
+        /**
+         * 分类 ID
+         */
         private Long categoryId;
 
-        @Schema(description = "分类名称", example = "餐饮")
+        /**
+         * 分类名称
+         */
         private String categoryName;
 
-        @Schema(description = "预算金额", example = "2000.00")
+        /**
+         * 预算金额
+         */
         private BigDecimal budgetAmount;
 
-        @Schema(description = "实际支出", example = "1500.00")
+        /**
+         * 已支出金额
+         */
         private BigDecimal spentAmount;
 
-        @Schema(description = "执行进度（百分比）", example = "75.00")
+        /**
+         * 进度百分比
+         */
         private BigDecimal progress;
 
-        @Schema(description = "状态", example = "active")
+        /**
+         * 状态
+         */
         private String status;
     }
 }

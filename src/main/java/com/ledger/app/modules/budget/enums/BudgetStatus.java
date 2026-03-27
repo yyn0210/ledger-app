@@ -1,45 +1,31 @@
 package com.ledger.app.modules.budget.enums;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
  * 预算状态枚举
- *
- * @author Chisong
- * @since 2026-03-24
  */
 @Getter
+@AllArgsConstructor
 public enum BudgetStatus {
 
-    /**
-     * 进行中
-     */
     ACTIVE("active", "进行中"),
-
-    /**
-     * 已完成
-     */
     COMPLETED("completed", "已完成"),
-
-    /**
-     * 已超支
-     */
     OVERDUE("overdue", "已超支");
 
     private final String code;
-    private final String description;
-
-    BudgetStatus(String code, String description) {
-        this.code = code;
-        this.description = description;
-    }
+    private final String name;
 
     /**
-     * 根据 code 获取枚举
+     * 根据代码获取枚举
+     *
+     * @param code 状态代码
+     * @return 预算状态
      */
     public static BudgetStatus fromCode(String code) {
         for (BudgetStatus status : values()) {
-            if (status.code.equals(code)) {
+            if (status.getCode().equals(code)) {
                 return status;
             }
         }

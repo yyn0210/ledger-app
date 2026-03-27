@@ -1,138 +1,152 @@
 package com.ledger.app.modules.budget.controller;
 
 import com.ledger.app.common.result.Result;
-import com.ledger.app.modules.auth.service.AuthService;
 import com.ledger.app.modules.budget.dto.request.CreateBudgetRequest;
 import com.ledger.app.modules.budget.dto.request.UpdateBudgetRequest;
+import com.ledger.app.modules.budget.dto.response.BudgetAlertResponse;
 import com.ledger.app.modules.budget.dto.response.BudgetDetailResponse;
 import com.ledger.app.modules.budget.dto.response.BudgetResponse;
 import com.ledger.app.modules.budget.dto.response.BudgetSummaryResponse;
 import com.ledger.app.modules.budget.service.BudgetService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * 预算控制器
- *
- * @author Chisong
- * @since 2026-03-24
+ * 预算管理控制器
  */
-@Tag(name = "预算管理", description = "预算 CRUD 操作接口")
-@SecurityRequirement(name = "BearerAuth")
+@Slf4j
 @RestController
 @RequestMapping("/api/budgets")
 @RequiredArgsConstructor
 public class BudgetController {
 
     private final BudgetService budgetService;
-    private final AuthService authService;
-
-    /**
-     * 获取当前用户 ID
-     */
-    private Long getCurrentUserId(HttpServletRequest request) {
-        String token = getTokenFromRequest(request);
-        return authService.getUserIdFromToken(token);
-    }
-
-    /**
-     * 从请求头获取 Token
-     */
-    private String getTokenFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
 
     /**
      * 获取预算列表
+     * GET /api/budgets?bookId={bookId}&period=monthly&status=active
      */
-    @Operation(summary = "获取预算列表", description = "获取指定账本的预算列表（支持按周期/状态过滤）")
     @GetMapping
     public Result<List<BudgetResponse>> getBudgets(
-            @RequestParam Long bookId,
-            @RequestParam(required = false) String period,
-            @RequestParam(required = false) String status) {
-        List<BudgetResponse> budgets = budgetService.getBudgets(bookId, period, status);
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam(value = "period", required = false) String period,
+            @RequestParam(value = "status", required = false) String status,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("获取预算列表，bookId: {}, period: {}, status: {}", bookId, period, status);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        List<BudgetResponse> budgets = budgetService.getBudgets(bookId, effectiveUserId, period, status);
         return Result.success(budgets);
     }
 
     /**
      * 获取预算详情
+     * GET /api/budgets/{id}
      */
-    @Operation(summary = "获取预算详情", description = "根据 ID 获取预算详细信息（含执行进度）")
     @GetMapping("/{id}")
-    public Result<BudgetDetailResponse> getBudgetDetail(@PathVariable Long id, @RequestParam Long bookId) {
-        BudgetDetailResponse detail = budgetService.getBudgetDetail(id, bookId);
-        return Result.success(detail);
+    public Result<BudgetDetailResponse> getBudgetDetail(
+            @PathVariable Long id,
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("获取预算详情，id: {}, bookId: {}", id, bookId);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        BudgetDetailResponse budget = budgetService.getBudgetDetail(id, bookId, effectiveUserId);
+        return Result.success(budget);
     }
 
     /**
      * 创建预算
+     * POST /api/budgets
      */
-    @Operation(summary = "创建预算", description = "创建一个新的预算")
     @PostMapping
-    public Result<BudgetResponse> createBudget(
-            @Valid @RequestBody CreateBudgetRequest request,
-            HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        BudgetResponse budget = budgetService.createBudget(userId, request);
-        return Result.success(budget);
+    public Result<Long> createBudget(
+            @RequestBody @Validated CreateBudgetRequest request,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("创建预算，request: {}", request);
+
+        if (userId != null) {
+            request.setUserId(userId);
+        } else if (request.getUserId() == null) {
+            request.setUserId(request.getBookId());
+        }
+
+        Long budgetId = budgetService.createBudget(request);
+        return Result.success(budgetId);
     }
 
     /**
      * 更新预算
+     * PUT /api/budgets/{id}
      */
-    @Operation(summary = "更新预算", description = "更新指定预算的信息")
     @PutMapping("/{id}")
-    public Result<BudgetResponse> updateBudget(
+    public Result<Void> updateBudget(
             @PathVariable Long id,
-            @RequestParam Long bookId,
-            @Valid @RequestBody UpdateBudgetRequest request,
-            HttpServletRequest httpRequest) {
-        Long userId = getCurrentUserId(httpRequest);
-        BudgetResponse budget = budgetService.updateBudget(id, bookId, userId, request);
-        return Result.success(budget);
+            @RequestBody @Validated UpdateBudgetRequest request,
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("更新预算，id: {}, bookId: {}", id, bookId);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        budgetService.updateBudget(id, request, bookId, effectiveUserId);
+        return Result.success(null);
     }
 
     /**
      * 删除预算
+     * DELETE /api/budgets/{id}
      */
-    @Operation(summary = "删除预算", description = "软删除指定预算")
     @DeleteMapping("/{id}")
-    public Result<Void> deleteBudget(@PathVariable Long id, @RequestParam Long bookId) {
-        budgetService.deleteBudget(id, bookId);
+    public Result<Void> deleteBudget(
+            @PathVariable Long id,
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("删除预算，id: {}, bookId: {}", id, bookId);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        budgetService.deleteBudget(id, bookId, effectiveUserId);
         return Result.success(null);
     }
 
     /**
      * 获取预算汇总统计
+     * GET /api/budgets/summary?bookId={bookId}&period=monthly
      */
-    @Operation(summary = "获取预算汇总统计", description = "获取预算汇总统计（总预算/总支出/按分类分组）")
     @GetMapping("/summary")
     public Result<BudgetSummaryResponse> getBudgetSummary(
-            @RequestParam Long bookId,
-            @RequestParam(required = false) String period) {
-        BudgetSummaryResponse summary = budgetService.getBudgetSummary(bookId, period);
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam(value = "period", required = false) String period,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("获取预算汇总统计，bookId: {}, period: {}", bookId, period);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        BudgetSummaryResponse summary = budgetService.getBudgetSummary(bookId, effectiveUserId, period);
         return Result.success(summary);
     }
 
     /**
      * 检查预算预警
+     * GET /api/budgets/alerts?bookId={bookId}
      */
-    @Operation(summary = "检查预算预警", description = "获取所有超支或达到预警线的预算")
     @GetMapping("/alerts")
-    public Result<List<BudgetResponse>> getBudgetAlerts(@RequestParam Long bookId) {
-        List<BudgetResponse> alerts = budgetService.getBudgetAlerts(bookId);
+    public Result<List<BudgetAlertResponse>> checkBudgetAlerts(
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("检查预算预警，bookId: {}", bookId);
+
+        Long effectiveUserId = userId != null ? userId : bookId;
+
+        List<BudgetAlertResponse> alerts = budgetService.checkBudgetAlerts(bookId, effectiveUserId);
         return Result.success(alerts);
     }
 }

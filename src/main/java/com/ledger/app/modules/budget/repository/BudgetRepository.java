@@ -1,7 +1,7 @@
 package com.ledger.app.modules.budget.repository;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.ledger.app.modules.budget.entity.Budget;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -11,68 +11,90 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 预算 Mapper
- *
- * @author Chisong
- * @since 2026-03-24
+ * 预算 Mapper 接口
  */
 @Mapper
 public interface BudgetRepository extends BaseMapper<Budget> {
 
     /**
-     * 根据账本 ID 获取预算列表
+     * 根据账本 ID 和用户 ID 获取预算列表
      *
      * @param bookId 账本 ID
-     * @param period 周期（null 表示全部）
-     * @param status 状态（null 表示全部）
+     * @param userId 用户 ID
      * @return 预算列表
      */
-    @Select("<script>" +
-            "SELECT * FROM budgets WHERE book_id = #{bookId} AND deleted = 0 " +
-            "<if test='period != null'>AND period = #{period}</if> " +
-            "<if test='status != null'>AND status = #{status}</if> " +
-            "ORDER BY created_at DESC" +
-            "</script>")
-    List<Budget> findByBookId(@Param("bookId") Long bookId,
-                               @Param("period") String period,
-                               @Param("status") String status);
+    @Select("SELECT * FROM budgets WHERE book_id = #{bookId} AND user_id = #{userId} AND deleted = 0 ORDER BY created_at DESC")
+    List<Budget> selectByBookIdAndUserId(@Param("bookId") Long bookId, @Param("userId") Long userId);
 
     /**
-     * 根据 ID 和账本 ID 获取预算（权限检查）
+     * 根据 ID 和账本 ID 获取预算
      *
-     * @param id 预算 ID
+     * @param id     预算 ID
      * @param bookId 账本 ID
-     * @return 预算信息
+     * @return 预算
      */
     @Select("SELECT * FROM budgets WHERE id = #{id} AND book_id = #{bookId} AND deleted = 0")
-    Budget findByIdAndBookId(@Param("id") Long id, @Param("bookId") Long bookId);
+    Budget selectByIdAndBookId(@Param("id") Long id, @Param("bookId") Long bookId);
 
     /**
      * 统计预算周期内、该分类的实际支出
      *
-     * @param bookId 账本 ID
-     * @param categoryId 分类 ID（null 表示所有分类）
-     * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return 总支出金额
+     * @param bookId     账本 ID
+     * @param categoryId 分类 ID
+     * @param startDate  开始日期
+     * @param endDate    结束日期
+     * @return 支出总额
      */
-    @Select("<script>" +
-            "SELECT COALESCE(SUM(amount), 0) FROM transactions " +
-            "WHERE book_id = #{bookId} AND deleted = 0 AND type = 2 " +
-            "<if test='categoryId != null'>AND category_id = #{categoryId}</if> " +
-            "AND transaction_date &gt;= #{startDate} AND transaction_date &lt;= #{endDate}" +
-            "</script>")
-    BigDecimal sumExpensesByBookIdAndCategoryIdAndDateRange(@Param("bookId") Long bookId,
-                                                             @Param("categoryId") Long categoryId,
-                                                             @Param("startDate") LocalDate startDate,
-                                                             @Param("endDate") LocalDate endDate);
+    @Select("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE book_id = #{bookId} AND category_id = #{categoryId} AND type = 2 AND transaction_date BETWEEN #{startDate} AND #{endDate} AND deleted = 0")
+    BigDecimal sumByBookIdAndCategoryIdAndDateRange(
+            @Param("bookId") Long bookId,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
     /**
-     * 统计预算数量
+     * 统计预算周期内的总支出（不限制分类）
+     *
+     * @param bookId    账本 ID
+     * @param startDate 开始日期
+     * @param endDate   结束日期
+     * @return 支出总额
+     */
+    @Select("SELECT COALESCE(SUM(amount), 0) FROM transactions WHERE book_id = #{bookId} AND type = 2 AND transaction_date BETWEEN #{startDate} AND #{endDate} AND deleted = 0")
+    BigDecimal sumTotalExpenseByDateRange(
+            @Param("bookId") Long bookId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    /**
+     * 按周期过滤预算
      *
      * @param bookId 账本 ID
-     * @return 数量
+     * @param userId 用户 ID
+     * @param period 周期
+     * @return 预算列表
      */
-    @Select("SELECT COUNT(*) FROM budgets WHERE book_id = #{bookId} AND deleted = 0")
-    int countByBookId(@Param("bookId") Long bookId);
+    @Select("SELECT * FROM budgets WHERE book_id = #{bookId} AND user_id = #{userId} AND period = #{period} AND deleted = 0 ORDER BY created_at DESC")
+    List<Budget> selectByBookIdAndUserIdAndPeriod(
+            @Param("bookId") Long bookId,
+            @Param("userId") Long userId,
+            @Param("period") String period
+    );
+
+    /**
+     * 按状态过滤预算
+     *
+     * @param bookId 账本 ID
+     * @param userId 用户 ID
+     * @param status 状态
+     * @return 预算列表
+     */
+    @Select("SELECT * FROM budgets WHERE book_id = #{bookId} AND user_id = #{userId} AND status = #{status} AND deleted = 0 ORDER BY created_at DESC")
+    List<Budget> selectByBookIdAndUserIdAndStatus(
+            @Param("bookId") Long bookId,
+            @Param("userId") Long userId,
+            @Param("status") String status
+    );
 }

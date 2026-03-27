@@ -3,30 +3,22 @@ package com.ledger.app.modules.budget.dto.response;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * 预算响应 DTO
+ * 预算预警响应 DTO
  */
 @Data
-public class BudgetResponse {
+public class BudgetAlertResponse {
 
     /**
      * 预算 ID
      */
-    private Long id;
-
-    /**
-     * 账本 ID
-     */
-    private Long bookId;
+    private Long budgetId;
 
     /**
      * 预算名称
      */
-    private String name;
+    private String budgetName;
 
     /**
      * 分类 ID
@@ -54,37 +46,17 @@ public class BudgetResponse {
     private BigDecimal progress;
 
     /**
-     * 周期：monthly/yearly/custom
-     */
-    private String period;
-
-    /**
-     * 开始日期
-     */
-    private LocalDate startDate;
-
-    /**
-     * 结束日期
-     */
-    private LocalDate endDate;
-
-    /**
      * 预警阈值（百分比）
      */
     private BigDecimal alertThreshold;
 
     /**
-     * 状态：active/completed/overdue
+     * 预警类型：warning/overdue
      */
-    private String status;
+    private String alertType;
 
     /**
-     * 创建时间
+     * 预警消息
      */
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updatedAt;
+    private String message;
 }

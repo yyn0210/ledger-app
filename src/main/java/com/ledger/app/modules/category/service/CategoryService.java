@@ -8,6 +8,9 @@ import java.util.List;
 
 /**
  * 分类服务接口
+ *
+ * @author Chisong
+ * @since 2026-03-24
  */
 public interface CategoryService {
 
@@ -15,41 +18,42 @@ public interface CategoryService {
      * 获取分类列表（带父子层级）
      *
      * @param bookId 账本 ID
-     * @param type   分类类型：1=支出 2=收入（null 表示全部）
+     * @param type 分类类型（1=支出 2=收入，null 表示全部）
      * @return 分类列表
      */
-    List<CategoryResponse> getCategories(Long bookId, Integer type);
+    List<CategoryResponse> getCategoriesByBookId(Long bookId, Integer type);
 
     /**
      * 获取分类详情
      *
-     * @param id     分类 ID
+     * @param id 分类 ID
      * @param bookId 账本 ID
-     * @return 分类详情
+     * @return 分类信息
      */
-    CategoryResponse getCategory(Long id, Long bookId);
+    CategoryResponse getCategoryByIdAndBookId(Long id, Long bookId);
 
     /**
      * 创建分类
      *
      * @param request 创建请求
-     * @return 分类 ID
+     * @return 分类信息
      */
-    Long createCategory(CreateCategoryRequest request);
+    CategoryResponse createCategory(CreateCategoryRequest request);
 
     /**
      * 更新分类
      *
-     * @param id      分类 ID
+     * @param id 分类 ID
+     * @param bookId 账本 ID
      * @param request 更新请求
-     * @param bookId  账本 ID
+     * @return 分类信息
      */
-    void updateCategory(Long id, UpdateCategoryRequest request, Long bookId);
+    CategoryResponse updateCategory(Long id, Long bookId, UpdateCategoryRequest request);
 
     /**
      * 删除分类
      *
-     * @param id     分类 ID
+     * @param id 分类 ID
      * @param bookId 账本 ID
      */
     void deleteCategory(Long id, Long bookId);
@@ -57,15 +61,8 @@ public interface CategoryService {
     /**
      * 获取系统预设分类
      *
-     * @param type 分类类型：1=支出 2=收入（null 表示全部）
+     * @param type 分类类型（1=支出 2=收入，null 表示全部）
      * @return 系统预设分类列表
      */
     List<CategoryResponse> getSystemCategories(Integer type);
-
-    /**
-     * 初始化用户账本的系统预设分类
-     *
-     * @param bookId 账本 ID
-     */
-    void initSystemCategories(Long bookId);
 }

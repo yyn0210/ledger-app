@@ -5,18 +5,23 @@ import com.ledger.app.modules.category.dto.request.CreateCategoryRequest;
 import com.ledger.app.modules.category.dto.request.UpdateCategoryRequest;
 import com.ledger.app.modules.category.dto.response.CategoryResponse;
 import com.ledger.app.modules.category.service.CategoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * 分类管理控制器
+ * 分类控制器
+ *
+ * @author Chisong
+ * @since 2026-03-24
  */
-@Slf4j
+@Tag(name = "分类管理", description = "分类 CRUD 操作接口")
+@SecurityRequirement(name = "BearerAuth")
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor
@@ -26,89 +31,71 @@ public class CategoryController {
 
     /**
      * 获取分类列表
-     * GET /api/categories?bookId={bookId}&type={type}
      */
+    @Operation(summary = "获取分类列表", description = "获取指定账本的分类列表（支持按类型过滤，返回父子层级结构）")
     @GetMapping
     public Result<List<CategoryResponse>> getCategories(
-            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestParam Long bookId,
             @RequestParam(required = false) Integer type) {
-        log.info("获取分类列表，bookId: {}, type: {}", bookId, type);
-        List<CategoryResponse> categories = categoryService.getCategories(bookId, type);
+        List<CategoryResponse> categories = categoryService.getCategoriesByBookId(bookId, type);
         return Result.success(categories);
     }
 
     /**
      * 获取分类详情
-     * GET /api/categories/{id}
      */
+    @Operation(summary = "获取分类详情", description = "根据 ID 获取分类详细信息")
     @GetMapping("/{id}")
     public Result<CategoryResponse> getCategory(
             @PathVariable Long id,
-            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId) {
-        log.info("获取分类详情，id: {}, bookId: {}", id, bookId);
-        CategoryResponse category = categoryService.getCategory(id, bookId);
+            @RequestParam Long bookId) {
+        CategoryResponse category = categoryService.getCategoryByIdAndBookId(id, bookId);
         return Result.success(category);
     }
 
     /**
      * 创建分类
-     * POST /api/categories
      */
+    @Operation(summary = "创建分类", description = "创建一个新的分类")
     @PostMapping
-    public Result<Long> createCategory(@RequestBody @Validated CreateCategoryRequest request) {
-        log.info("创建分类，request: {}", request);
-        Long categoryId = categoryService.createCategory(request);
-        return Result.success(categoryId);
+    public Result<CategoryResponse> createCategory(@Valid @RequestBody CreateCategoryRequest request) {
+        CategoryResponse category = categoryService.createCategory(request);
+        return Result.success(category);
     }
 
     /**
      * 更新分类
-     * PUT /api/categories/{id}
      */
+    @Operation(summary = "更新分类", description = "更新指定分类的信息")
     @PutMapping("/{id}")
-    public Result<Void> updateCategory(
+    public Result<CategoryResponse> updateCategory(
             @PathVariable Long id,
-            @RequestBody @Validated UpdateCategoryRequest request,
-            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId) {
-        log.info("更新分类，id: {}, bookId: {}", id, bookId);
-        categoryService.updateCategory(id, request, bookId);
-        return Result.success(null);
+            @RequestParam Long bookId,
+            @Valid @RequestBody UpdateCategoryRequest request) {
+        CategoryResponse category = categoryService.updateCategory(id, bookId, request);
+        return Result.success(category);
     }
 
     /**
      * 删除分类
-     * DELETE /api/categories/{id}
      */
+    @Operation(summary = "删除分类", description = "软删除指定分类（系统预设分类和已被引用的分类不能删除）")
     @DeleteMapping("/{id}")
     public Result<Void> deleteCategory(
             @PathVariable Long id,
-            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId) {
-        log.info("删除分类，id: {}, bookId: {}", id, bookId);
+            @RequestParam Long bookId) {
         categoryService.deleteCategory(id, bookId);
         return Result.success(null);
     }
 
     /**
      * 获取系统预设分类
-     * GET /api/categories/system?type={type}
      */
+    @Operation(summary = "获取系统预设分类", description = "获取系统预设的分类模板（支出 10 个 + 收入 5 个）")
     @GetMapping("/system")
     public Result<List<CategoryResponse>> getSystemCategories(
             @RequestParam(required = false) Integer type) {
-        log.info("获取系统预设分类，type: {}", type);
         List<CategoryResponse> categories = categoryService.getSystemCategories(type);
         return Result.success(categories);
-    }
-
-    /**
-     * 初始化系统预设分类
-     * POST /api/categories/system/init?bookId={bookId}
-     */
-    @PostMapping("/system/init")
-    public Result<Void> initSystemCategories(
-            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId) {
-        log.info("初始化系统预设分类，bookId: {}", bookId);
-        categoryService.initSystemCategories(bookId);
-        return Result.success(null);
     }
 }

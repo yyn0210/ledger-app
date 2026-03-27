@@ -1,96 +1,217 @@
-# 全平台智能记账应用 - 后端服务
+# ledger-app-backend
 
-基于 Spring Boot 3.x 的全平台智能记账应用后端服务。
+> 🧾 全平台智能记账 App - Spring Boot 3.x 后端服务
 
-## 技术栈
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://adoptium.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-brightgreen.svg)](https://spring.io/projects/spring-boot)
 
-- **框架**: Spring Boot 3.x
-- **数据库**: PostgreSQL 15
-- **ORM**: MyBatis Plus + JPA
-- **缓存**: Redis 7
-- **对象存储**: MinIO
-- **API 文档**: SpringDoc OpenAPI (Swagger)
-- **认证**: JWT
-- **构建工具**: Maven
-- **容器化**: Docker & Docker Compose
+---
 
-## 快速开始
+## 📖 项目简介
+
+ledger-app-backend 是全平台智能记账 App 的后端服务，基于 Spring Boot 3.x 构建，提供 RESTful API 接口，支持 Web 端、移动端和 AI 服务的数据交互。
+
+### 核心功能
+
+- 🔐 用户认证与授权（JWT）
+- 📚 账本管理（多账本支持）
+- 💰 交易记录 CRUD
+- 📊 预算管理
+- 🔄 周期账单
+- 📤 数据导出（Excel/CSV）
+- 🔌 WebSocket 实时同步
+- 🔔 推送通知
+
+---
+
+## 🛠️ 技术栈
+
+### 核心框架
+- **Java**: 17+
+- **Spring Boot**: 3.x
+- **Spring Security**: 6.x (JWT 认证)
+- **Spring Data JPA**: 数据持久化
+
+### 数据库
+- **PostgreSQL**: 主数据库
+- **Redis**: 缓存 + 会话管理
+
+### 其他依赖
+- **Lombok**: 简化 Java 代码
+- **MapStruct**: DTO 映射
+- **Swagger/OpenAPI**: API 文档
+- **Flyway**: 数据库迁移
+
+---
+
+## 🚀 快速开始
 
 ### 环境要求
 
 - JDK 17+
+- PostgreSQL 14+
+- Redis 7+
 - Maven 3.8+
-- Docker & Docker Compose (可选)
 
-### 使用 Docker Compose 启动（推荐）
-
-```bash
-# 启动所有服务（PostgreSQL, Redis, MinIO, Application）
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f app
-
-# 停止服务
-docker-compose down
-```
-
-### 本地开发
-
-1. 确保 PostgreSQL、Redis、MinIO 已启动
-2. 修改 `application-dev.yml` 配置
-3. 运行应用：
+### 安装步骤
 
 ```bash
+# 1. 克隆仓库
+git clone https://github.com/yyn0210/ledger-app-backend.git
+cd ledger-app-backend
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，配置数据库连接等
+
+# 3. 创建数据库
+createdb ledger_app
+
+# 4. 构建项目
+mvn clean install
+
+# 5. 运行应用
 mvn spring-boot:run
 ```
 
-## 访问地址
+### 配置文件
 
-- **API 服务**: http://localhost:8080/api
-- **Swagger 文档**: http://localhost:8080/api/swagger-ui.html
-- **MinIO 控制台**: http://localhost:9001
+```yaml
+# application.yml 关键配置
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ledger_app
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  redis:
+    host: localhost
+    port: 6379
 
-## 项目结构
-
-```
-src/main/java/com/ledger/app/
-├── common/
-│   ├── config/          # 配置类
-│   ├── constant/        # 常量定义
-│   ├── exception/       # 异常处理
-│   └── result/          # 统一响应
-├── modules/
-│   ├── auth/           # 认证模块
-│   ├── book/           # 账本模块
-│   ├── category/       # 分类模块
-│   ├── account/        # 账户模块
-│   ├── transaction/    # 交易模块
-│   └── budget/         # 预算模块
-└── LedgerApplication.java
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 86400000  # 24 小时
 ```
 
-## 数据库初始化
+---
 
-数据库表结构在 `src/main/resources/schema.sql` 中定义。
+## 📡 API 文档
 
-使用 Docker Compose 时会自动执行初始化脚本。
+启动应用后访问：
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/v3/api-docs
 
-## API 文档
+### 主要接口
 
-启动应用后访问：http://localhost:8080/api/swagger-ui.html
+| 模块 | 端点 | 说明 |
+|------|------|------|
+| 认证 | `/api/auth/*` | 登录/注册/刷新令牌 |
+| 用户 | `/api/users/*` | 用户信息管理 |
+| 账本 | `/api/books/*` | 账本 CRUD |
+| 交易 | `/api/transactions/*` | 交易记录管理 |
+| 预算 | `/api/budgets/*` | 预算管理 |
+| 周期账单 | `/api/recurring/*` | 周期账单配置 |
+| 导出 | `/api/export/*` | 数据导出 |
 
-## 开发计划
+---
 
-- [ ] 用户认证模块
-- [ ] 账本管理
-- [ ] 分类管理
-- [ ] 账户管理
-- [ ] 交易记录
-- [ ] 预算管理
-- [ ] 数据统计与分析
-- [ ] 文件上传（MinIO）
+## 📁 项目结构
 
-## License
+```
+ledger-app-backend/
+├── src/main/java/com/ledger/app/
+│   ├── modules/          # 业务模块
+│   │   ├── auth/        # 认证模块
+│   │   ├── user/        # 用户模块
+│   │   ├── book/        # 账本模块
+│   │   ├── transaction/ # 交易模块
+│   │   ├── budget/      # 预算模块
+│   │   ├── recurring/   # 周期账单
+│   │   └── export/      # 导出模块
+│   ├── common/           # 公共组件
+│   │   ├── config/      # 配置类
+│   │   ├── exception/   # 异常处理
+│   │   └── util/        # 工具类
+│   └── LedgerApplication.java
+├── src/main/resources/
+│   ├── application.yml
+│   └── db/migration/    # Flyway 迁移脚本
+├── pom.xml
+└── README.md
+```
 
-MIT
+---
+
+## 🧪 测试
+
+```bash
+# 运行单元测试
+mvn test
+
+# 运行集成测试
+mvn verify
+
+# 生成测试覆盖率报告
+mvn clean test jacoco:report
+```
+
+---
+
+## 📦 部署
+
+### Docker 部署
+
+```bash
+# 构建镜像
+docker build -t ledger-app-backend:latest .
+
+# 运行容器
+docker run -d \
+  -p 8080:8080 \
+  -e DB_HOST=postgres \
+  -e DB_PASSWORD=secret \
+  ledger-app-backend:latest
+```
+
+### 生产环境
+
+1. 配置环境变量
+2. 启用 HTTPS
+3. 配置数据库连接池
+4. 启用 Redis 集群
+5. 配置日志收集
+
+---
+
+## 🤝 贡献指南
+
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
+
+---
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+
+---
+
+## 👥 团队
+
+- **架构师**: qingsong (青松)
+- **后端开发**: chisong (赤松)
+- **组织**: yyn0210
+
+---
+
+## 📞 联系方式
+
+- **GitHub**: https://github.com/yyn0210/ledger-app-backend
+- **Issues**: https://github.com/yyn0210/ledger-app-backend/issues
+
+---
+
+**Made with ❤️ by the ledger-app team**

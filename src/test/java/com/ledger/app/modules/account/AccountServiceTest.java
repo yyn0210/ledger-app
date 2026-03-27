@@ -1,10 +1,11 @@
 package com.ledger.app.modules.account;
 
+import com.ledger.app.modules.account.dto.request.CreateAccountRequest;
+import com.ledger.app.modules.account.dto.request.UpdateAccountRequest;
+import com.ledger.app.modules.account.dto.response.AccountResponse;
 import com.ledger.app.modules.account.entity.Account;
-import com.ledger.app.modules.account.enums.AccountType;
 import com.ledger.app.modules.account.repository.AccountRepository;
 import com.ledger.app.modules.account.service.impl.AccountServiceImpl;
-import com.ledger.app.common.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,19 +14,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
  * 账户服务单元测试
- *
- * @author Chisong
- * @since 2026-03-24
  */
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
@@ -36,105 +33,188 @@ class AccountServiceTest {
     @InjectMocks
     private AccountServiceImpl accountService;
 
-    private Account account;
+    private Account testAccount;
+    private CreateAccountRequest createRequest;
+    private UpdateAccountRequest updateRequest;
 
     @BeforeEach
     void setUp() {
-        account = Account.builder()
-                .id(1L)
-                .name("招商银行卡")
-                .type(AccountType.DEBIT_CARD.getCode())
-                .balance(new BigDecimal("10000.00"))
-                .userId(1L)
-                .build();
+        testAccount = new Account();
+        testAccount.setId(1L);
+        testAccount.setBookId(100L);
+        testAccount.setUserId(100L);
+        testAccount.setName("测试账户");
+        testAccount.setType(2);
+        testAccount.setBalance(new BigDecimal("10000.00"));
+        testAccount.setCurrency("CNY");
+        testAccount.setIcon("🏦");
+        testAccount.setColor("#E10602");
+        testAccount.setIsInclude(true);
+        testAccount.setSortOrder(1);
+
+        createRequest = new CreateAccountRequest();
+        createRequest.setBookId(100L);
+        createRequest.setUserId(100L);
+        createRequest.setName("新账户");
+        createRequest.setType(1);
+        createRequest.setBalance(new BigDecimal("5000.00"));
+        createRequest.setCurrency("CNY");
+        createRequest.setIsInclude(true);
+
+        updateRequest = new UpdateAccountRequest();
+        updateRequest.setName("更新后的账户");
+        updateRequest.setBalance(new BigDecimal("15000.00"));
+        updateRequest.setSortOrder(2);
     }
 
     @Test
-    void testCreateAccount() {
-        // 准备
-        when(accountRepository.save(any(Account.class))).thenReturn(account);
+    void testGetAccounts_Success() {
+        // Arrange
+        List<Account> accounts = new ArrayList<>();
+        accounts.add(testAccount);
+        when(accountRepository.selectByBookIdAndUserId(100L, 100L)).thenReturn(accounts);
 
-        // 执行
-        Long accountId = accountService.create(account, 1L);
+        // Act
+        List<AccountResponse> result = accountService.getAccounts(100L, 100L);
 
-        // 验证
-        assertNotNull(accountId);
-        assertEquals(1L, accountId);
-        verify(accountRepository, times(1)).save(any(Account.class));
-    }
-
-    @Test
-    void testGetAccountById() {
-        // 准备
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
-
-        // 执行
-        Account result = accountService.getById(1L, 1L);
-
-        // 验证
-        assertNotNull(result);
-        assertEquals("招商银行卡", result.getName());
-        assertEquals(new BigDecimal("10000.00"), result.getBalance());
-    }
-
-    @Test
-    void testGetAccountById_NotFound() {
-        // 准备
-        when(accountRepository.findById(1L)).thenReturn(Optional.empty());
-
-        // 执行 & 验证
-        assertThrows(BusinessException.class, () -> accountService.getById(1L, 1L));
-    }
-
-    @Test
-    void testGetAccountsByBookId() {
-        // 准备
-        List<Account> accounts = Arrays.asList(account);
-        when(accountRepository.findByBookId(1L)).thenReturn(accounts);
-
-        // 执行
-        List<Account> result = accountService.getAccountsByBookId(1L);
-
-        // 验证
+        // Assert
         assertNotNull(result);
         assertEquals(1, result.size());
+        assertEquals("测试账户", result.get(0).getName());
+        verify(accountRepository).selectByBookIdAndUserId(100L, 100L);
     }
 
     @Test
-    void testUpdateAccount() {
-        // 准备
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+    void testGetAccount_Success() {
+        // Arrange
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(testAccount);
 
-        // 执行
-        account.setName("更新后的银行卡");
-        accountService.update(1L, account, 1L);
+        // Act
+        AccountResponse result = accountService.getAccount(1L, 100L, 100L);
 
-        // 验证
-        verify(accountRepository, times(1)).save(account);
+        // Assert
+        assertNotNull(result);
+        assertEquals("测试账户", result.getName());
+        verify(accountRepository).selectByIdAndBookId(1L, 100L);
     }
 
     @Test
-    void testDeleteAccount() {
-        // 准备
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+    void testGetAccount_NotFound() {
+        // Arrange
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(null);
 
-        // 执行
-        accountService.delete(1L, 1L);
-
-        // 验证
-        verify(accountRepository, times(1)).deleteById(1L);
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            accountService.getAccount(1L, 100L, 100L);
+        });
+        assertTrue(exception.getMessage().contains("账户不存在"));
     }
 
     @Test
-    void testUpdateBalance() {
-        // 准备
-        when(accountRepository.findById(1L)).thenReturn(Optional.of(account));
+    void testGetAccount_NoPermission() {
+        // Arrange
+        testAccount.setUserId(200L); // Different user
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(testAccount);
 
-        // 执行
-        accountService.updateBalance(1L, new BigDecimal("500.00"), 1L);
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            accountService.getAccount(1L, 100L, 100L);
+        });
+        assertTrue(exception.getMessage().contains("无权访问"));
+    }
 
-        // 验证
-        verify(accountRepository, times(1)).save(account);
-        assertEquals(new BigDecimal("10500.00"), account.getBalance());
+    @Test
+    void testCreateAccount_Success() {
+        // Arrange
+        when(accountRepository.insert(any(Account.class))).thenReturn(1);
+
+        // Act
+        Long result = accountService.createAccount(createRequest);
+
+        // Assert
+        assertNotNull(result);
+        verify(accountRepository).insert(any(Account.class));
+    }
+
+    @Test
+    void testUpdateAccount_Success() {
+        // Arrange
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(testAccount);
+        when(accountRepository.updateById(any(Account.class))).thenReturn(1);
+
+        // Act
+        accountService.updateAccount(1L, updateRequest, 100L, 100L);
+
+        // Assert
+        verify(accountRepository).selectByIdAndBookId(1L, 100L);
+        verify(accountRepository).updateById(any(Account.class));
+    }
+
+    @Test
+    void testUpdateAccount_NoPermission() {
+        // Arrange
+        testAccount.setUserId(200L);
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(testAccount);
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            accountService.updateAccount(1L, updateRequest, 100L, 100L);
+        });
+        assertTrue(exception.getMessage().contains("无权修改"));
+    }
+
+    @Test
+    void testDeleteAccount_Success() {
+        // Arrange
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(testAccount);
+        when(accountRepository.countTransactionsByAccountId(1L)).thenReturn(0L);
+        when(accountRepository.deleteById(1L)).thenReturn(1);
+
+        // Act
+        accountService.deleteAccount(1L, 100L, 100L);
+
+        // Assert
+        verify(accountRepository).deleteById(1L);
+    }
+
+    @Test
+    void testDeleteAccount_HasTransactions() {
+        // Arrange
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(testAccount);
+        when(accountRepository.countTransactionsByAccountId(1L)).thenReturn(5L);
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            accountService.deleteAccount(1L, 100L, 100L);
+        });
+        assertTrue(exception.getMessage().contains("已被交易记录使用"));
+    }
+
+    @Test
+    void testDeleteAccount_NoPermission() {
+        // Arrange
+        testAccount.setUserId(200L);
+        when(accountRepository.selectByIdAndBookId(1L, 100L)).thenReturn(testAccount);
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            accountService.deleteAccount(1L, 100L, 100L);
+        });
+        assertTrue(exception.getMessage().contains("无权删除"));
+    }
+
+    @Test
+    void testGetAccountSummary_Success() {
+        // Arrange
+        when(accountRepository.sumByUserIdAndInclude(100L, true)).thenReturn(new BigDecimal("50000.00"));
+        when(accountRepository.selectCount(any())).thenReturn(5L);
+
+        // Act
+        AccountSummaryResponse result = accountService.getAccountSummary(100L);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(new BigDecimal("50000.00"), result.getTotalBalance());
+        assertEquals(5, result.getAccountCount());
     }
 }

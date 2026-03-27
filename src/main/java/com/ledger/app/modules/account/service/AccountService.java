@@ -9,9 +9,6 @@ import java.util.List;
 
 /**
  * 账户服务接口
- *
- * @author Chisong
- * @since 2026-03-24
  */
 public interface AccountService {
 
@@ -19,51 +16,53 @@ public interface AccountService {
      * 获取账户列表
      *
      * @param bookId 账本 ID
+     * @param userId 用户 ID
      * @return 账户列表
      */
-    List<AccountResponse> getAccountsByBookId(Long bookId);
+    List<AccountResponse> getAccounts(Long bookId, Long userId);
 
     /**
      * 获取账户详情
      *
-     * @param id 账户 ID
+     * @param id     账户 ID
      * @param bookId 账本 ID
-     * @return 账户信息
+     * @param userId 用户 ID
+     * @return 账户详情
      */
-    AccountResponse getAccountByIdAndBookId(Long id, Long bookId);
+    AccountResponse getAccount(Long id, Long bookId, Long userId);
 
     /**
      * 创建账户
      *
      * @param request 创建请求
-     * @return 账户信息
+     * @return 账户 ID
      */
-    AccountResponse createAccount(CreateAccountRequest request);
+    Long createAccount(CreateAccountRequest request);
 
     /**
      * 更新账户
      *
-     * @param id 账户 ID
-     * @param bookId 账本 ID
+     * @param id      账户 ID
      * @param request 更新请求
-     * @return 账户信息
+     * @param bookId  账本 ID
+     * @param userId  用户 ID
      */
-    AccountResponse updateAccount(Long id, Long bookId, UpdateAccountRequest request);
+    void updateAccount(Long id, UpdateAccountRequest request, Long bookId, Long userId);
 
     /**
      * 删除账户
      *
-     * @param id 账户 ID
-     * @param bookId 账本 ID
-     */
-    void deleteAccount(Long id, Long bookId);
-
-    /**
-     * 账户汇总统计
-     *
+     * @param id     账户 ID
      * @param bookId 账本 ID
      * @param userId 用户 ID
-     * @return 汇总统计
      */
-    AccountSummaryResponse getAccountSummary(Long bookId, Long userId);
+    void deleteAccount(Long id, Long bookId, Long userId);
+
+    /**
+     * 获取账户汇总统计
+     *
+     * @param userId 用户 ID
+     * @return 账户汇总统计
+     */
+    AccountSummaryResponse getAccountSummary(Long userId);
 }

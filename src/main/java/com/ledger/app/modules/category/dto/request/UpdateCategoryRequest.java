@@ -1,28 +1,24 @@
 package com.ledger.app.modules.category.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-
 /**
- * 更新分类请求 DTO
+ * 更新分类请求
+ *
+ * @author Chisong
+ * @since 2026-03-24
  */
 @Data
+@Schema(description = "更新分类请求")
 public class UpdateCategoryRequest {
 
-    /**
-     * 分类名称
-     */
-    @NotBlank(message = "分类名称不能为空")
+    @Schema(description = "分类名称", example = "美食")
     private String name;
 
-    /**
-     * 图标 emoji
-     */
+    @Schema(description = "图标 emoji", example = "🍔")
     private String icon;
 
-    /**
-     * 排序顺序
-     */
+    @Schema(description = "排序顺序", example = "2")
     private Integer sortOrder;
 }

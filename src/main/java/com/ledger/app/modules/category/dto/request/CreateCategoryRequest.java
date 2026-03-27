@@ -1,47 +1,38 @@
 package com.ledger.app.modules.category.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
 /**
- * 创建分类请求 DTO
+ * 创建分类请求
+ *
+ * @author Chisong
+ * @since 2026-03-24
  */
 @Data
+@Schema(description = "创建分类请求")
 public class CreateCategoryRequest {
 
-    /**
-     * 账本 ID
-     */
     @NotNull(message = "账本 ID 不能为空")
+    @Schema(description = "账本 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long bookId;
 
-    /**
-     * 父分类 ID，0 表示一级分类
-     */
-    @NotNull(message = "父分类 ID 不能为空")
-    private Long parentId;
+    @Schema(description = "父分类 ID，0 表示一级分类", example = "0")
+    private Long parentId = 0L;
 
-    /**
-     * 分类名称
-     */
     @NotBlank(message = "分类名称不能为空")
+    @Schema(description = "分类名称", example = "餐饮", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
 
-    /**
-     * 图标 emoji
-     */
+    @Schema(description = "图标 emoji", example = "🍜")
     private String icon;
 
-    /**
-     * 类型：1=支出 2=收入
-     */
     @NotNull(message = "分类类型不能为空")
+    @Schema(description = "分类类型：1=支出 2=收入", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer type;
 
-    /**
-     * 排序顺序
-     */
-    private Integer sortOrder;
+    @Schema(description = "排序顺序", example = "1")
+    private Integer sortOrder = 0;
 }

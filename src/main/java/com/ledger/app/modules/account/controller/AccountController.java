@@ -6,23 +6,18 @@ import com.ledger.app.modules.account.dto.request.UpdateAccountRequest;
 import com.ledger.app.modules.account.dto.response.AccountResponse;
 import com.ledger.app.modules.account.dto.response.AccountSummaryResponse;
 import com.ledger.app.modules.account.service.AccountService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * 账户控制器
- *
- * @author Chisong
- * @since 2026-03-24
+ * 账户管理控制器
  */
-@Tag(name = "账户管理", description = "账户 CRUD 操作接口")
-@SecurityRequirement(name = "BearerAuth")
+@Slf4j
 @RestController
 @RequestMapping("/api/accounts")
 @RequiredArgsConstructor
@@ -32,66 +27,107 @@ public class AccountController {
 
     /**
      * 获取账户列表
+     * GET /api/accounts?bookId={bookId}
      */
-    @Operation(summary = "获取账户列表", description = "获取指定账本的所有账户")
     @GetMapping
-    public Result<List<AccountResponse>> getAccounts(@RequestParam Long bookId) {
-        List<AccountResponse> accounts = accountService.getAccountsByBookId(bookId);
+    public Result<List<AccountResponse>> getAccounts(
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("获取账户列表，bookId: {}, userId: {}", bookId, userId);
+        
+        // 如果 userId 未从 JWT 解析，使用 bookId 作为默认值（临时方案）
+        Long effectiveUserId = userId != null ? userId : bookId;
+        
+        List<AccountResponse> accounts = accountService.getAccounts(bookId, effectiveUserId);
         return Result.success(accounts);
     }
 
     /**
      * 获取账户详情
+     * GET /api/accounts/{id}
      */
-    @Operation(summary = "获取账户详情", description = "根据 ID 获取账户详细信息")
     @GetMapping("/{id}")
-    public Result<AccountResponse> getAccount(@PathVariable Long id, @RequestParam Long bookId) {
-        AccountResponse account = accountService.getAccountByIdAndBookId(id, bookId);
+    public Result<AccountResponse> getAccount(
+            @PathVariable Long id,
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("获取账户详情，id: {}, bookId: {}", id, bookId);
+        
+        Long effectiveUserId = userId != null ? userId : bookId;
+        
+        AccountResponse account = accountService.getAccount(id, bookId, effectiveUserId);
         return Result.success(account);
     }
 
     /**
      * 创建账户
+     * POST /api/accounts
      */
-    @Operation(summary = "创建账户", description = "创建一个新的账户")
     @PostMapping
-    public Result<AccountResponse> createAccount(@Valid @RequestBody CreateAccountRequest request) {
-        AccountResponse account = accountService.createAccount(request);
-        return Result.success(account);
+    public Result<Long> createAccount(
+            @RequestBody @Validated CreateAccountRequest request,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("创建账户，request: {}", request);
+        
+        // 如果 userId 未从 JWT 解析，使用 bookId 作为默认值
+        if (userId != null) {
+            request.setUserId(userId);
+        } else if (request.getUserId() == null) {
+            request.setUserId(request.getBookId());
+        }
+        
+        Long accountId = accountService.createAccount(request);
+        return Result.success(accountId);
     }
 
     /**
      * 更新账户
+     * PUT /api/accounts/{id}
      */
-    @Operation(summary = "更新账户", description = "更新指定账户的信息")
     @PutMapping("/{id}")
-    public Result<AccountResponse> updateAccount(
+    public Result<Void> updateAccount(
             @PathVariable Long id,
-            @RequestParam Long bookId,
-            @Valid @RequestBody UpdateAccountRequest request) {
-        AccountResponse account = accountService.updateAccount(id, bookId, request);
-        return Result.success(account);
-    }
-
-    /**
-     * 删除账户
-     */
-    @Operation(summary = "删除账户", description = "软删除指定账户（已被引用的账户不能删除）")
-    @DeleteMapping("/{id}")
-    public Result<Void> deleteAccount(@PathVariable Long id, @RequestParam Long bookId) {
-        accountService.deleteAccount(id, bookId);
+            @RequestBody @Validated UpdateAccountRequest request,
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("更新账户，id: {}, bookId: {}", id, bookId);
+        
+        Long effectiveUserId = userId != null ? userId : bookId;
+        
+        accountService.updateAccount(id, request, bookId, effectiveUserId);
         return Result.success(null);
     }
 
     /**
-     * 账户汇总统计
+     * 删除账户
+     * DELETE /api/accounts/{id}
      */
-    @Operation(summary = "账户汇总统计", description = "获取账户汇总统计（总资产/按类型分组）")
+    @DeleteMapping("/{id}")
+    public Result<Void> deleteAccount(
+            @PathVariable Long id,
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("删除账户，id: {}, bookId: {}", id, bookId);
+        
+        Long effectiveUserId = userId != null ? userId : bookId;
+        
+        accountService.deleteAccount(id, bookId, effectiveUserId);
+        return Result.success(null);
+    }
+
+    /**
+     * 获取账户汇总统计
+     * GET /api/accounts/summary?bookId={bookId}
+     */
     @GetMapping("/summary")
     public Result<AccountSummaryResponse> getAccountSummary(
-            @RequestParam Long bookId,
-            @RequestParam Long userId) {
-        AccountSummaryResponse summary = accountService.getAccountSummary(bookId, userId);
+            @RequestParam @NotNull(message = "账本 ID 不能为空") Long bookId,
+            @RequestAttribute(value = "userId", required = false) Long userId) {
+        log.info("获取账户汇总统计，bookId: {}", bookId);
+        
+        Long effectiveUserId = userId != null ? userId : bookId;
+        
+        AccountSummaryResponse summary = accountService.getAccountSummary(effectiveUserId);
         return Result.success(summary);
     }
 }

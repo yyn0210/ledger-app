@@ -1,8 +1,14 @@
 package com.ledger.app.modules.category.enums;
 
+import lombok.Getter;
+
 /**
  * 分类类型枚举
+ *
+ * @author Chisong
+ * @since 2026-03-24
  */
+@Getter
 public enum CategoryType {
 
     /**
@@ -23,19 +29,8 @@ public enum CategoryType {
         this.description = description;
     }
 
-    public Integer getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
     /**
      * 根据 code 获取枚举
-     *
-     * @param code 类型码
-     * @return 分类类型
      */
     public static CategoryType fromCode(Integer code) {
         for (CategoryType type : values()) {

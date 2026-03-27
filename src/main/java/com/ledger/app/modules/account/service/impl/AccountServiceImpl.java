@@ -9,6 +9,7 @@ import com.ledger.app.modules.account.entity.Account;
 import com.ledger.app.modules.account.enums.AccountType;
 import com.ledger.app.modules.account.repository.AccountRepository;
 import com.ledger.app.modules.account.service.AccountService;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,14 +17,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * 账户服务实现
- *
- * @author Chisong
- * @since 2026-03-24
+ * 账户服务实现类
  */
 @Slf4j
 @Service
@@ -33,65 +32,75 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
 
     @Override
-    @Transactional(readOnly = true)
-    public List<AccountResponse> getAccountsByBookId(Long bookId) {
-        List<Account> accounts = accountRepository.findByBookId(bookId);
+    public List<AccountResponse> getAccounts(Long bookId, Long userId) {
+        log.info("获取账户列表，bookId: {}, userId: {}", bookId, userId);
+
+        List<Account> accounts = accountRepository.selectByBookIdAndUserId(bookId, userId);
         return accounts.stream()
-                .map(account -> {
-                    AccountResponse response = AccountResponse.fromEntity(account);
-                    // 设置类型名称
-                    try {
-                        AccountType type = AccountType.fromCode(account.getType());
-                        response.setTypeName(type.getName());
-                    } catch (IllegalArgumentException e) {
-                        response.setTypeName("未知");
-                    }
-                    return response;
-                })
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public AccountResponse getAccountByIdAndBookId(Long id, Long bookId) {
-        Account account = accountRepository.findByIdAndBookId(id, bookId);
+    public AccountResponse getAccount(Long id, Long bookId, Long userId) {
+        log.info("获取账户详情，id: {}, bookId: {}, userId: {}", id, bookId, userId);
+
+        Account account = accountRepository.selectByIdAndBookId(id, bookId);
         if (account == null) {
-            throw new BusinessException("账户不存在或无权访问");
+            throw new BusinessException("账户不存在");
         }
-        return AccountResponse.fromEntity(account);
+
+        // 权限检查：确保账户属于当前用户
+        if (!account.getUserId().equals(userId)) {
+            throw new BusinessException("无权访问此账户");
+        }
+
+        return convertToResponse(account);
     }
 
     @Override
-    @Transactional
-    public AccountResponse createAccount(CreateAccountRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public Long createAccount(CreateAccountRequest request) {
+        log.info("创建账户，request: {}", request);
+
+        // 验证账户类型
+        AccountType.fromCode(request.getType());
+
+        // 创建账户
         Account account = new Account();
         account.setBookId(request.getBookId());
+        account.setUserId(request.getUserId());
         account.setName(request.getName());
         account.setType(request.getType());
         account.setBalance(request.getBalance() != null ? request.getBalance() : BigDecimal.ZERO);
         account.setCurrency(request.getCurrency() != null ? request.getCurrency() : "CNY");
         account.setIcon(request.getIcon());
         account.setColor(request.getColor());
-        account.setIsInclude(request.getIsInclude() != null ? request.getIsInclude() : 1);
+        account.setIsInclude(request.getIsInclude() != null ? request.getIsInclude() : true);
         account.setSortOrder(request.getSortOrder() != null ? request.getSortOrder() : 0);
-        account.setDeleted(0);
-        account.setCreatedAt(LocalDateTime.now());
-        account.setUpdatedAt(LocalDateTime.now());
 
         accountRepository.insert(account);
-        log.info("创建账户成功：bookId={}, accountId={}, name={}", request.getBookId(), account.getId(), account.getName());
 
-        return AccountResponse.fromEntity(account);
+        log.info("账户创建成功，id: {}", account.getId());
+        return account.getId();
     }
 
     @Override
-    @Transactional
-    public AccountResponse updateAccount(Long id, Long bookId, UpdateAccountRequest request) {
-        Account account = accountRepository.findByIdAndBookId(id, bookId);
+    @Transactional(rollbackFor = Exception.class)
+    public void updateAccount(Long id, UpdateAccountRequest request, Long bookId, Long userId) {
+        log.info("更新账户，id: {}, bookId: {}, userId: {}", id, bookId, userId);
+
+        Account account = accountRepository.selectByIdAndBookId(id, bookId);
         if (account == null) {
-            throw new BusinessException("账户不存在或无权访问");
+            throw new BusinessException("账户不存在");
         }
 
+        // 权限检查
+        if (!account.getUserId().equals(userId)) {
+            throw new BusinessException("无权修改此账户");
+        }
+
+        // 更新字段
         if (request.getName() != null) {
             account.setName(request.getName());
         }
@@ -111,74 +120,111 @@ public class AccountServiceImpl implements AccountService {
             account.setSortOrder(request.getSortOrder());
         }
 
-        account.setUpdatedAt(LocalDateTime.now());
         accountRepository.updateById(account);
-        log.info("更新账户成功：bookId={}, accountId={}", bookId, id);
 
-        return AccountResponse.fromEntity(account);
+        log.info("账户更新成功，id: {}", id);
     }
 
     @Override
-    @Transactional
-    public void deleteAccount(Long id, Long bookId) {
-        Account account = accountRepository.findByIdAndBookId(id, bookId);
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAccount(Long id, Long bookId, Long userId) {
+        log.info("删除账户，id: {}, bookId: {}, userId: {}", id, bookId, userId);
+
+        Account account = accountRepository.selectByIdAndBookId(id, bookId);
         if (account == null) {
-            throw new BusinessException("账户不存在或无权访问");
+            throw new BusinessException("账户不存在");
         }
 
-        // TODO: 检查是否有交易记录使用此账户（依赖交易模块）
-        // Long count = transactionRepository.countByAccountId(id);
-        // if (count > 0) {
-        //     throw new BusinessException("该账户已被交易记录使用，无法删除");
-        // }
+        // 权限检查
+        if (!account.getUserId().equals(userId)) {
+            throw new BusinessException("无权删除此账户");
+        }
+
+        // 检查是否被交易记录引用
+        Long count = accountRepository.countTransactionsByAccountId(id);
+        if (count > 0) {
+            throw new BusinessException("该账户已被交易记录使用，无法删除");
+        }
 
         // 软删除
-        account.setDeleted(1);
-        account.setUpdatedAt(LocalDateTime.now());
-        accountRepository.updateById(account);
-        log.info("删除账户成功：bookId={}, accountId={}", bookId, id);
+        accountRepository.deleteById(id);
+
+        log.info("账户删除成功，id: {}", id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public AccountSummaryResponse getAccountSummary(Long bookId, Long userId) {
-        // 获取账户数量
-        int accountCount = accountRepository.countByBookId(bookId);
+    public AccountSummaryResponse getAccountSummary(Long userId) {
+        log.info("获取账户汇总统计，userId: {}", userId);
 
-        // 统计总资产（只计算 is_include=1 的账户）
-        BigDecimal totalBalance = accountRepository.sumTotalAssets(userId);
+        AccountSummaryResponse response = new AccountSummaryResponse();
 
-        // 按类型统计
-        List<AccountRepository.TypeBalance> typeBalances = accountRepository.sumByType(userId);
-        List<AccountSummaryResponse.TypeBalance> byType = typeBalances.stream()
-                .map(tb -> {
-                    try {
-                        AccountType type = AccountType.fromCode(tb.getType());
-                        return AccountSummaryResponse.TypeBalance.builder()
-                                .type(tb.getType())
-                                .typeName(type.getName())
-                                .balance(tb.getBalance())
-                                .build();
-                    } catch (IllegalArgumentException e) {
-                        return AccountSummaryResponse.TypeBalance.builder()
-                                .type(tb.getType())
-                                .typeName("未知")
-                                .balance(tb.getBalance())
-                                .build();
-                    }
-                })
-                .collect(Collectors.toList());
+        // 统计总余额（只计算 is_include=true 的账户）
+        BigDecimal totalBalance = accountRepository.sumByUserIdAndInclude(userId, true);
+        response.setTotalBalance(totalBalance != null ? totalBalance : BigDecimal.ZERO);
 
-        // TODO: 统计总收入和总支出（依赖交易模块）
-        BigDecimal totalIncome = BigDecimal.ZERO;
-        BigDecimal totalExpense = BigDecimal.ZERO;
+        // 统计账户数量
+        LambdaQueryWrapper<Account> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Account::getUserId, userId)
+                .eq(Account::getDeleted, 0);
+        Long accountCount = accountRepository.selectCount(wrapper);
+        response.setAccountCount(accountCount.intValue());
 
-        return AccountSummaryResponse.builder()
-                .totalBalance(totalBalance)
-                .totalIncome(totalIncome)
-                .totalExpense(totalExpense)
-                .accountCount(accountCount)
-                .byType(byType)
-                .build();
+        // 按类型分组统计
+        List<AccountRepository.AccountTypeBalance> typeBalances = accountRepository.sumByType(userId);
+        List<AccountSummaryResponse.AccountTypeBalance> byType = new ArrayList<>();
+
+        for (AccountRepository.AccountTypeBalance balance : typeBalances) {
+            AccountSummaryResponse.AccountTypeBalance typeBalance = new AccountSummaryResponse.AccountTypeBalance();
+            typeBalance.setType(balance.getType());
+            typeBalance.setBalance(balance.getBalance() != null ? balance.getBalance() : BigDecimal.ZERO);
+
+            // 获取类型名称和图标
+            try {
+                AccountType accountType = AccountType.fromCode(balance.getType());
+                typeBalance.setTypeName(accountType.getName());
+                typeBalance.setTypeIcon(accountType.getIcon());
+            } catch (IllegalArgumentException e) {
+                typeBalance.setTypeName("未知");
+                typeBalance.setTypeIcon("❓");
+            }
+
+            byType.add(typeBalance);
+        }
+
+        response.setByType(byType);
+
+        log.info("账户汇总统计完成，totalBalance: {}, accountCount: {}", response.getTotalBalance(), response.getAccountCount());
+        return response;
+    }
+
+    /**
+     * 转换 Entity 到 Response
+     */
+    private AccountResponse convertToResponse(Account account) {
+        AccountResponse response = new AccountResponse();
+        response.setId(account.getId());
+        response.setBookId(account.getBookId());
+        response.setName(account.getName());
+        response.setType(account.getType());
+        response.setBalance(account.getBalance());
+        response.setCurrency(account.getCurrency());
+        response.setIcon(account.getIcon());
+        response.setColor(account.getColor());
+        response.setIsInclude(account.getIsInclude());
+        response.setSortOrder(account.getSortOrder());
+        response.setCreatedAt(account.getCreatedAt());
+        response.setUpdatedAt(account.getUpdatedAt());
+
+        // 设置类型名称和图标
+        try {
+            AccountType accountType = AccountType.fromCode(account.getType());
+            response.setTypeName(accountType.getName());
+            response.setTypeIcon(accountType.getIcon());
+        } catch (IllegalArgumentException e) {
+            response.setTypeName("未知");
+            response.setTypeIcon("❓");
+        }
+
+        return response;
     }
 }

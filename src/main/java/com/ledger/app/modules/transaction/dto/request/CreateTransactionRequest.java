@@ -1,65 +1,94 @@
 package com.ledger.app.modules.transaction.dto.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 创建交易记录请求
- *
- * @author Chisong
- * @since 2026-03-24
+ * 创建交易记录请求 DTO
  */
 @Data
-@Schema(description = "创建交易记录请求")
 public class CreateTransactionRequest {
 
+    /**
+     * 账本 ID
+     */
     @NotNull(message = "账本 ID 不能为空")
-    @Schema(description = "账本 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long bookId;
 
+    /**
+     * 用户 ID（从 JWT 解析）
+     */
+    private Long userId;
+
+    /**
+     * 交易类型：1=收入 2=支出 3=转账
+     */
     @NotNull(message = "交易类型不能为空")
-    @Schema(description = "交易类型：1=收入 2=支出 3=转账", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
     private Integer type;
 
+    /**
+     * 金额
+     */
     @NotNull(message = "金额不能为空")
-    @Schema(description = "金额", example = "50.00", requiredMode = Schema.RequiredMode.REQUIRED)
+    @DecimalMin(value = "0.01", message = "金额必须大于 0")
     private BigDecimal amount;
 
-    @Schema(description = "分类 ID", example = "1")
+    /**
+     * 分类 ID
+     */
+    @NotNull(message = "分类 ID 不能为空")
     private Long categoryId;
 
+    /**
+     * 账户 ID
+     */
     @NotNull(message = "账户 ID 不能为空")
-    @Schema(description = "账户 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long accountId;
 
-    @Schema(description = "目标账户 ID（转账时必填）", example = "2")
+    /**
+     * 目标账户 ID（转账时）
+     */
     private Long toAccountId;
 
-    @Schema(description = "标题", example = "午餐")
+    /**
+     * 标题
+     */
     private String title;
 
-    @Schema(description = "描述", example = "公司附近的面馆")
+    /**
+     * 描述
+     */
     private String description;
 
+    /**
+     * 交易日期
+     */
     @NotNull(message = "交易日期不能为空")
-    @Schema(description = "交易日期", example = "2026-03-24", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDate transactionDate;
 
-    @Schema(description = "地点", example = "北京市朝阳区")
+    /**
+     * 地点
+     */
     private String location;
 
-    @Schema(description = "商户", example = "XX 面馆")
+    /**
+     * 商户
+     */
     private String merchant;
 
-    @Schema(description = "标签", example = "[\"工作餐\"]")
+    /**
+     * 标签
+     */
     private List<String> tags;
 
-    @Schema(description = "图片 URL", example = "[\"https://...\"]")
+    /**
+     * 图片 URL
+     */
     private List<String> imageUrls;
 }

@@ -1,39 +1,35 @@
 package com.ledger.app.modules.transaction.service.impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ledger.app.common.exception.BusinessException;
+import com.ledger.app.modules.account.entity.Account;
 import com.ledger.app.modules.account.repository.AccountRepository;
+import com.ledger.app.modules.category.entity.Category;
+import com.ledger.app.modules.category.repository.CategoryRepository;
 import com.ledger.app.modules.transaction.dto.request.*;
-import com.ledger.app.modules.transaction.dto.response.TransactionPageResponse;
 import com.ledger.app.modules.transaction.dto.response.TransactionResponse;
+import com.ledger.app.modules.transaction.dto.response.TransactionPageResponse;
 import com.ledger.app.modules.transaction.entity.Transaction;
 import com.ledger.app.modules.transaction.enums.TransactionType;
 import com.ledger.app.modules.transaction.repository.TransactionRepository;
 import com.ledger.app.modules.transaction.service.TransactionService;
-import com.ledger.app.modules.websocket.service.WebSocketMessageService;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * 交易服务实现
- *
- * @author Chisong
- * @since 2026-03-24
+ * 交易记录服务实现类
  */
 @Slf4j
 @Service
@@ -42,56 +38,74 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final AccountRepository accountRepository;
-    private final WebSocketMessageService webSocketMessageService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final CategoryRepository categoryRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public TransactionPageResponse getTransactions(Long bookId, Integer page, Integer size,
-                                                    Integer type, Long categoryId, Long accountId,
-                                                    String startDate, String endDate,
-                                                    String minAmount, String maxAmount, String keyword) {
-        // 构建分页对象
-        Page<Transaction> pageObj = new Page<>(page != null ? page : 1, size != null ? Math.min(size, 100) : 20);
+    public TransactionPageResponse getTransactions(
+            Long bookId, Long userId,
+            Integer page, Integer size,
+            Integer type, Long categoryId, Long accountId,
+            LocalDate startDate, LocalDate endDate,
+            BigDecimal minAmount, BigDecimal maxAmount,
+            String keyword
+    ) {
+        log.info("分页查询交易记录，bookId: {}, userId: {}, page: {}, size: {}", bookId, userId, page, size);
 
-        // 解析参数
-        Integer typeValue = type;
-        LocalDate startDateValue = StringUtils.hasText(startDate) ? LocalDate.parse(startDate, DATE_FORMATTER) : null;
-        LocalDate endDateValue = StringUtils.hasText(endDate) ? LocalDate.parse(endDate, DATE_FORMATTER) : null;
-        BigDecimal minAmountValue = StringUtils.hasText(minAmount) ? new BigDecimal(minAmount) : null;
-        BigDecimal maxAmountValue = StringUtils.hasText(maxAmount) ? new BigDecimal(maxAmount) : null;
+        Page<Transaction> mpPage = new Page<>(page != null ? page : 1, size != null ? size : 20);
+        IPage<Transaction> result = transactionRepository.selectPageWithFilters(
+                mpPage, bookId, type, categoryId, accountId, startDate, endDate, minAmount, maxAmount, keyword
+        );
 
-        // 分页查询
-        IPage<Transaction> result = transactionRepository.selectPageWithFilter(
-                pageObj, bookId, typeValue, categoryId, accountId,
-                startDateValue, endDateValue, minAmountValue, maxAmountValue, keyword);
+        List<TransactionResponse> responses = result.getRecords().stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
 
-        // 转换为响应
-        List<TransactionResponse> list = result.getRecords().stream()
-                .map(this::buildTransactionResponse)
-                .toList();
-
-        return TransactionPageResponse.of(list, result.getTotal(), result.getCurrent(), result.getSize());
+        return new TransactionPageResponse(
+                responses,
+                result.getTotal(),
+                (int) result.getCurrent(),
+                (int) result.getSize(),
+                (int) result.getPages()
+        );
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public TransactionResponse getTransactionByIdAndBookId(Long id, Long bookId) {
-        Transaction transaction = transactionRepository.findByIdAndBookId(id, bookId);
+    public TransactionResponse getTransaction(Long id, Long bookId, Long userId) {
+        log.info("获取交易详情，id: {}, bookId: {}", id, bookId);
+
+        Transaction transaction = transactionRepository.selectByIdAndBookId(id, bookId);
         if (transaction == null) {
-            throw new BusinessException("交易记录不存在或无权访问");
+            throw new BusinessException("交易记录不存在");
         }
-        return buildTransactionResponse(transaction);
+
+        return convertToResponse(transaction);
     }
 
     @Override
-    @Transactional
-    public TransactionResponse createTransaction(Long userId, CreateTransactionRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public Long createTransaction(CreateTransactionRequest request) {
+        log.info("创建交易记录，request: {}", request);
+
+        // 验证交易类型
+        TransactionType.fromCode(request.getType());
+
+        // 验证分类是否存在
+        Category category = categoryRepository.selectByIdAndBookId(request.getCategoryId(), request.getBookId());
+        if (category == null) {
+            throw new BusinessException("分类不存在");
+        }
+
+        // 验证账户是否存在
+        Account account = accountRepository.selectByIdAndBookId(request.getAccountId(), request.getBookId());
+        if (account == null) {
+            throw new BusinessException("账户不存在");
+        }
+
         // 创建交易记录
         Transaction transaction = new Transaction();
         transaction.setBookId(request.getBookId());
-        transaction.setUserId(userId);
+        transaction.setUserId(request.getUserId());
         transaction.setType(request.getType());
         transaction.setAmount(request.getAmount());
         transaction.setCategoryId(request.getCategoryId());
@@ -102,32 +116,29 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionDate(request.getTransactionDate());
         transaction.setLocation(request.getLocation());
         transaction.setMerchant(request.getMerchant());
-        transaction.setTags(parseListToJson(request.getTags()));
-        transaction.setImageUrls(parseListToJson(request.getImageUrls()));
-        transaction.setIsTransfer(request.getType() != null && request.getType() == 3 ? 1 : 0);
-        transaction.setDeleted(0);
+        transaction.setTags(toJson(request.getTags()));
+        transaction.setImageUrls(toJson(request.getImageUrls()));
+        transaction.setIsTransfer(false);
         transaction.setCreatedAt(LocalDateTime.now());
         transaction.setUpdatedAt(LocalDateTime.now());
 
         transactionRepository.insert(transaction);
 
         // 更新账户余额
-        updateAccountBalance(transaction);
+        updateAccountBalance(request.getAccountId(), request.getType(), request.getAmount(), true);
 
-        // 发送 WebSocket 通知
-        sendTransactionCreatedNotification(userId, transaction);
-
-        log.info("创建交易记录成功：userId={}, transactionId={}, amount={}", userId, transaction.getId(), transaction.getAmount());
-
-        return buildTransactionResponse(transaction);
+        log.info("交易记录创建成功，id: {}", transaction.getId());
+        return transaction.getId();
     }
 
     @Override
-    @Transactional
-    public TransactionResponse updateTransaction(Long id, Long bookId, Long userId, UpdateTransactionRequest request) {
-        Transaction transaction = transactionRepository.findByIdAndBookId(id, bookId);
+    @Transactional(rollbackFor = Exception.class)
+    public void updateTransaction(Long id, UpdateTransactionRequest request, Long bookId, Long userId) {
+        log.info("更新交易记录，id: {}, bookId: {}", id, bookId);
+
+        Transaction transaction = transactionRepository.selectByIdAndBookId(id, bookId);
         if (transaction == null) {
-            throw new BusinessException("交易记录不存在或无权访问");
+            throw new BusinessException("交易记录不存在");
         }
 
         // 保存旧金额用于余额回滚
@@ -136,9 +147,6 @@ public class TransactionServiceImpl implements TransactionService {
         Long oldAccountId = transaction.getAccountId();
 
         // 更新字段
-        if (request.getBookId() != null) {
-            transaction.setBookId(request.getBookId());
-        }
         if (request.getType() != null) {
             transaction.setType(request.getType());
         }
@@ -167,241 +175,257 @@ public class TransactionServiceImpl implements TransactionService {
             transaction.setMerchant(request.getMerchant());
         }
         if (request.getTags() != null) {
-            transaction.setTags(parseListToJson(request.getTags()));
+            transaction.setTags(toJson(request.getTags()));
         }
         if (request.getImageUrls() != null) {
-            transaction.setImageUrls(parseListToJson(request.getImageUrls()));
+            transaction.setImageUrls(toJson(request.getImageUrls()));
         }
-
         transaction.setUpdatedAt(LocalDateTime.now());
+
         transactionRepository.updateById(transaction);
 
-        // 更新账户余额（先回滚旧的，再应用新的）
-        rollbackAccountBalance(oldAccountId, oldAmount, oldType);
-        updateAccountBalance(transaction);
-
-        // 发送 WebSocket 通知
-        sendTransactionUpdatedNotification(userId, transaction);
-
-        log.info("更新交易记录成功：userId={}, transactionId={}", userId, id);
-
-        return buildTransactionResponse(transaction);
+        // 更新账户余额：先回滚旧记录，再应用新记录
+        updateAccountBalance(oldAccountId, oldType, oldAmount, false); // 回滚旧
+        updateAccountBalance(transaction.getAccountId(), transaction.getType(), transaction.getAmount(), true); // 应用新
     }
 
     @Override
-    @Transactional
-    public void deleteTransaction(Long id, Long bookId) {
-        Transaction transaction = transactionRepository.findByIdAndBookId(id, bookId);
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteTransaction(Long id, Long bookId, Long userId) {
+        log.info("删除交易记录，id: {}, bookId: {}", id, bookId);
+
+        Transaction transaction = transactionRepository.selectByIdAndBookId(id, bookId);
         if (transaction == null) {
-            throw new BusinessException("交易记录不存在或无权访问");
+            throw new BusinessException("交易记录不存在");
         }
 
         // 回滚账户余额
-        rollbackAccountBalance(transaction.getAccountId(), transaction.getAmount(), transaction.getType());
+        updateAccountBalance(transaction.getAccountId(), transaction.getType(), transaction.getAmount(), false);
 
         // 软删除
-        transaction.setDeleted(1);
-        transaction.setUpdatedAt(LocalDateTime.now());
-        transactionRepository.updateById(transaction);
+        transactionRepository.deleteById(id);
 
-        // 发送 WebSocket 通知
-        sendTransactionDeletedNotification(transaction.getUserId(), transaction.getBookId(), id);
-
-        log.info("删除交易记录成功：transactionId={}", id);
+        log.info("交易记录删除成功，id: {}", id);
     }
 
     @Override
-    @Transactional
-    public BatchCreateResponse batchCreate(Long userId, BatchCreateRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public List<Long> batchCreateTransactions(BatchCreateRequest request) {
+        log.info("批量创建交易记录，count: {}", request.getTransactions().size());
+
         List<Long> ids = new ArrayList<>();
         for (CreateTransactionRequest txRequest : request.getTransactions()) {
             txRequest.setBookId(request.getBookId());
-            TransactionResponse response = createTransaction(userId, txRequest);
-            ids.add(response.getId());
+            txRequest.setUserId(request.getUserId());
+            Long id = createTransaction(txRequest);
+            ids.add(id);
         }
-        return new BatchCreateResponse(ids.size(), ids);
+
+        log.info("批量创建成功，count: {}", ids.size());
+        return ids;
     }
 
     @Override
-    @Transactional
-    public BatchDeleteResponse batchDelete(Long bookId, BatchDeleteRequest request) {
-        int deletedCount = 0;
+    @Transactional(rollbackFor = Exception.class)
+    public Integer batchDeleteTransactions(BatchDeleteRequest request) {
+        log.info("批量删除交易记录，count: {}", request.getIds().size());
+
+        int count = 0;
         for (Long id : request.getIds()) {
             try {
-                deleteTransaction(id, bookId);
-                deletedCount++;
-            } catch (Exception e) {
-                log.warn("删除交易记录失败：id={}, error={}", id, e.getMessage());
+                deleteTransaction(id, request.getBookId(), null);
+                count++;
+            } catch (BusinessException e) {
+                log.warn("删除交易记录失败，id: {}, error: {}", id, e.getMessage());
             }
         }
-        return new BatchDeleteResponse(deletedCount);
+
+        log.info("批量删除成功，count: {}", count);
+        return count;
     }
 
     @Override
-    @Transactional
-    public TransactionResponse createTransfer(Long userId, TransferRequest request) {
-        // 验证账户
-        var fromAccount = accountRepository.selectById(request.getFromAccountId());
-        var toAccount = accountRepository.selectById(request.getToAccountId());
-        if (fromAccount == null || toAccount == null) {
-            throw new BusinessException("账户不存在");
+    @Transactional(rollbackFor = Exception.class)
+    public Long createTransfer(TransferRequest request) {
+        log.info("创建转账交易，fromAccountId: {}, toAccountId: {}, amount: {}",
+                request.getFromAccountId(), request.getToAccountId(), request.getAmount());
+
+        // 验证转出账户
+        Account fromAccount = accountRepository.selectByIdAndBookId(request.getFromAccountId(), request.getBookId());
+        if (fromAccount == null) {
+            throw new BusinessException("转出账户不存在");
         }
+
+        // 验证转入账户
+        Account toAccount = accountRepository.selectByIdAndBookId(request.getToAccountId(), request.getBookId());
+        if (toAccount == null) {
+            throw new BusinessException("转入账户不存在");
+        }
+
+        // 验证余额是否充足
+        if (fromAccount.getBalance().compareTo(request.getAmount()) < 0) {
+            throw new BusinessException("转出账户余额不足");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
 
         // 创建支出记录（from 账户）
         Transaction expense = new Transaction();
         expense.setBookId(request.getBookId());
-        expense.setUserId(userId);
+        expense.setUserId(request.getUserId());
         expense.setType(2); // 支出
         expense.setAmount(request.getAmount());
+        expense.setCategoryId(1L); // 默认分类，实际使用时需要转账专用分类
         expense.setAccountId(request.getFromAccountId());
-        expense.setTitle(request.getTitle());
+        expense.setToAccountId(request.getToAccountId());
+        expense.setTitle(request.getTitle() != null ? request.getTitle() : "转账");
         expense.setDescription(request.getDescription());
         expense.setTransactionDate(request.getTransactionDate());
-        expense.setIsTransfer(1);
-        expense.setDeleted(0);
-        expense.setCreatedAt(LocalDateTime.now());
-        expense.setUpdatedAt(LocalDateTime.now());
+        expense.setIsTransfer(true);
+        expense.setCreatedAt(now);
+        expense.setUpdatedAt(now);
+
+        transactionRepository.insert(expense);
 
         // 创建收入记录（to 账户）
         Transaction income = new Transaction();
         income.setBookId(request.getBookId());
-        income.setUserId(userId);
+        income.setUserId(request.getUserId());
         income.setType(1); // 收入
         income.setAmount(request.getAmount());
+        income.setCategoryId(1L);
         income.setAccountId(request.getToAccountId());
-        income.setTitle(request.getTitle());
+        income.setTitle(request.getTitle() != null ? request.getTitle() : "转账");
         income.setDescription(request.getDescription());
         income.setTransactionDate(request.getTransactionDate());
-        income.setIsTransfer(1);
-        income.setDeleted(0);
-        income.setCreatedAt(LocalDateTime.now());
-        income.setUpdatedAt(LocalDateTime.now());
+        income.setIsTransfer(true);
+        income.setTransferToId(expense.getId());
+        income.setCreatedAt(now);
+        income.setUpdatedAt(now);
 
-        // 插入两条记录
-        transactionRepository.insert(expense);
         transactionRepository.insert(income);
 
         // 关联两条记录
         expense.setTransferToId(income.getId());
-        income.setTransferToId(expense.getId());
         transactionRepository.updateById(expense);
-        transactionRepository.updateById(income);
 
         // 更新账户余额
         accountRepository.decreaseBalance(request.getFromAccountId(), request.getAmount());
         accountRepository.increaseBalance(request.getToAccountId(), request.getAmount());
 
-        log.info("创建转账交易成功：userId={}, fromAccountId={}, toAccountId={}, amount={}",
-                userId, request.getFromAccountId(), request.getToAccountId(), request.getAmount());
-
-        return buildTransactionResponse(expense);
+        log.info("转账交易创建成功，expenseId: {}, incomeId: {}", expense.getId(), income.getId());
+        return expense.getId();
     }
 
     /**
      * 更新账户余额
+     *
+     * @param accountId 账户 ID
+     * @param type      交易类型
+     * @param amount    金额
+     * @param increase  true=增加余额，false=减少余额
      */
-    private void updateAccountBalance(Transaction transaction) {
-        if (transaction.getType() == 1) { // 收入
-            accountRepository.increaseBalance(transaction.getAccountId(), transaction.getAmount());
-        } else if (transaction.getType() == 2) { // 支出
-            accountRepository.decreaseBalance(transaction.getAccountId(), transaction.getAmount());
+    private void updateAccountBalance(Long accountId, Integer type, BigDecimal amount, boolean increase) {
+        if (type == 1) { // 收入
+            if (increase) {
+                accountRepository.increaseBalance(accountId, amount);
+            } else {
+                accountRepository.decreaseBalance(accountId, amount);
+            }
+        } else if (type == 2) { // 支出
+            if (increase) {
+                accountRepository.decreaseBalance(accountId, amount);
+            } else {
+                accountRepository.increaseBalance(accountId, amount);
+            }
         }
-        // 转账不更新总资产
+        // 转账类型不直接影响余额（已在 createTransfer 中处理）
     }
 
     /**
-     * 回滚账户余额
+     * 对象转 JSON 字符串
      */
-    private void rollbackAccountBalance(Long accountId, BigDecimal amount, Integer type) {
-        if (type == 1) { // 收入回滚：减少
-            accountRepository.decreaseBalance(accountId, amount);
-        } else if (type == 2) { // 支出回滚：增加
-            accountRepository.increaseBalance(accountId, amount);
+    private String toJson(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.warn("JSON 序列化失败", e);
+            return null;
         }
     }
 
     /**
-     * 构建交易响应（包含关联名称）
+     * JSON 字符串转对象
      */
-    private TransactionResponse buildTransactionResponse(Transaction transaction) {
-        TransactionResponse response = TransactionResponse.fromEntity(transaction);
-        
+    private <T> List<T> fromJson(String json, Class<T> clazz) {
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
+        } catch (JsonProcessingException e) {
+            log.warn("JSON 反序列化失败", e);
+            return null;
+        }
+    }
+
+    /**
+     * 转换 Entity 到 Response
+     */
+    private TransactionResponse convertToResponse(Transaction transaction) {
+        TransactionResponse response = new TransactionResponse();
+        response.setId(transaction.getId());
+        response.setBookId(transaction.getBookId());
+        response.setType(transaction.getType());
+        response.setAmount(transaction.getAmount());
+        response.setCategoryId(transaction.getCategoryId());
+        response.setAccountId(transaction.getAccountId());
+        response.setToAccountId(transaction.getToAccountId());
+        response.setTitle(transaction.getTitle());
+        response.setDescription(transaction.getDescription());
+        response.setTransactionDate(transaction.getTransactionDate());
+        response.setLocation(transaction.getLocation());
+        response.setMerchant(transaction.getMerchant());
+        response.setTags(fromJson(transaction.getTags(), String.class));
+        response.setImageUrls(fromJson(transaction.getImageUrls(), String.class));
+        response.setIsTransfer(transaction.getIsTransfer());
+        response.setCreatedAt(transaction.getCreatedAt());
+        response.setUpdatedAt(transaction.getUpdatedAt());
+
         // 设置类型名称
         try {
-            TransactionType type = TransactionType.fromCode(transaction.getType());
-            response.setTypeName(type.getName());
+            response.setTypeName(TransactionType.fromCode(transaction.getType()).getName());
         } catch (IllegalArgumentException e) {
             response.setTypeName("未知");
         }
 
+        // 设置分类名称
+        if (transaction.getCategoryId() != null) {
+            Category category = categoryRepository.selectById(transaction.getCategoryId());
+            if (category != null) {
+                response.setCategoryName(category.getName());
+            }
+        }
+
+        // 设置账户名称
+        if (transaction.getAccountId() != null) {
+            Account account = accountRepository.selectById(transaction.getAccountId());
+            if (account != null) {
+                response.setAccountName(account.getName());
+            }
+        }
+
+        // 设置目标账户名称
+        if (transaction.getToAccountId() != null) {
+            Account toAccount = accountRepository.selectById(transaction.getToAccountId());
+            if (toAccount != null) {
+                response.setToAccountName(toAccount.getName());
+            }
+        }
+
         return response;
-    }
-
-    /**
-     * 列表转 JSON
-     */
-    private String parseListToJson(List<String> list) {
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
-        try {
-            return objectMapper.writeValueAsString(list);
-        } catch (JsonProcessingException e) {
-            log.warn("JSON 序列化失败：{}", e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * 发送交易创建通知
-     */
-    private void sendTransactionCreatedNotification(Long userId, Transaction transaction) {
-        try {
-            Map<String, Object> transactionData = new HashMap<>();
-            transactionData.put("id", transaction.getId());
-            transactionData.put("bookId", transaction.getBookId());
-            transactionData.put("type", transaction.getType());
-            transactionData.put("amount", transaction.getAmount());
-            transactionData.put("categoryId", transaction.getCategoryId());
-            transactionData.put("accountId", transaction.getAccountId());
-            transactionData.put("title", transaction.getTitle());
-            transactionData.put("transactionDate", transaction.getTransactionDate());
-
-            webSocketMessageService.sendTransactionCreated(userId, transaction.getBookId(), transactionData);
-        } catch (Exception e) {
-            log.error("发送交易创建 WebSocket 通知失败：error={}", e.getMessage());
-        }
-    }
-
-    /**
-     * 发送交易更新通知
-     */
-    private void sendTransactionUpdatedNotification(Long userId, Transaction transaction) {
-        try {
-            Map<String, Object> transactionData = new HashMap<>();
-            transactionData.put("id", transaction.getId());
-            transactionData.put("bookId", transaction.getBookId());
-            transactionData.put("type", transaction.getType());
-            transactionData.put("amount", transaction.getAmount());
-            transactionData.put("categoryId", transaction.getCategoryId());
-            transactionData.put("accountId", transaction.getAccountId());
-            transactionData.put("title", transaction.getTitle());
-            transactionData.put("transactionDate", transaction.getTransactionDate());
-
-            webSocketMessageService.sendTransactionUpdated(userId, transaction.getBookId(), transactionData);
-        } catch (Exception e) {
-            log.error("发送交易更新 WebSocket 通知失败：error={}", e.getMessage());
-        }
-    }
-
-    /**
-     * 发送交易删除通知
-     */
-    private void sendTransactionDeletedNotification(Long userId, Long bookId, Long transactionId) {
-        try {
-            webSocketMessageService.sendTransactionDeleted(userId, bookId, transactionId);
-        } catch (Exception e) {
-            log.error("发送交易删除 WebSocket 通知失败：error={}", e.getMessage());
-        }
     }
 }

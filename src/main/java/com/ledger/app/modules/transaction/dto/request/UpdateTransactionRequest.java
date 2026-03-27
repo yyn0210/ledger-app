@@ -1,55 +1,76 @@
 package com.ledger.app.modules.transaction.dto.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import javax.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 更新交易记录请求
- *
- * @author Chisong
- * @since 2026-03-24
+ * 更新交易记录请求 DTO
  */
 @Data
-@Schema(description = "更新交易记录请求")
 public class UpdateTransactionRequest {
 
-    @Schema(description = "账本 ID", example = "1")
+    /**
+     * 账本 ID
+     */
     private Long bookId;
 
-    @Schema(description = "交易类型：1=收入 2=支出 3=转账", example = "2")
+    /**
+     * 交易类型
+     */
     private Integer type;
 
-    @Schema(description = "金额", example = "80.00")
+    /**
+     * 金额
+     */
+    @DecimalMin(value = "0.00", message = "金额不能为负数")
     private BigDecimal amount;
 
-    @Schema(description = "分类 ID", example = "2")
+    /**
+     * 分类 ID
+     */
     private Long categoryId;
 
-    @Schema(description = "账户 ID", example = "1")
+    /**
+     * 账户 ID
+     */
     private Long accountId;
 
-    @Schema(description = "标题", example = "晚餐")
+    /**
+     * 标题
+     */
     private String title;
 
-    @Schema(description = "描述", example = "更新后的描述")
+    /**
+     * 描述
+     */
     private String description;
 
-    @Schema(description = "交易日期", example = "2026-03-24")
+    /**
+     * 交易日期
+     */
     private LocalDate transactionDate;
 
-    @Schema(description = "地点", example = "北京市朝阳区")
+    /**
+     * 地点
+     */
     private String location;
 
-    @Schema(description = "商户", example = "XX 餐厅")
+    /**
+     * 商户
+     */
     private String merchant;
 
-    @Schema(description = "标签", example = "[\"聚餐\"]")
+    /**
+     * 标签
+     */
     private List<String> tags;
 
-    @Schema(description = "图片 URL", example = "[\"https://...\"]")
+    /**
+     * 图片 URL
+     */
     private List<String> imageUrls;
 }

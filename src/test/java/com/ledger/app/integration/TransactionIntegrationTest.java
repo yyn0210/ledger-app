@@ -8,6 +8,7 @@ import com.ledger.app.modules.book.dto.request.CreateBookRequest;
 import com.ledger.app.modules.category.dto.request.CreateCategoryRequest;
 import com.ledger.app.modules.account.dto.request.CreateAccountRequest;
 import com.ledger.app.modules.transaction.dto.request.CreateTransactionRequest;
+import com.ledger.app.modules.transaction.dto.request.TransferRequest;
 import com.ledger.app.modules.transaction.enums.TransactionType;
 import com.ledger.app.common.result.Result;
 import org.junit.jupiter.api.BeforeEach;
@@ -227,5 +228,130 @@ class TransactionIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.list").isArray());
+    }
+
+    @Test
+    void testCreateTransfer_UpdatesBothAccounts() throws Exception {
+        // 创建第二个账户
+        CreateAccountRequest accountRequest2 = CreateAccountRequest.builder()
+                .name("测试微信钱包")
+                .type(2)
+                .balance(new BigDecimal("5000.00"))
+                .bookId(bookId)
+                .build();
+
+        String accountResponse2 = mockMvc.perform(post("/api/account")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(accountRequest2)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Result<Long> accountResult2 = objectMapper.readValue(accountResponse2,
+                objectMapper.getTypeFactory().constructParametricType(Result.class, Long.class));
+        Long accountId2 = accountResult2.getData();
+
+        // 获取初始余额
+        String account1Response = mockMvc.perform(get("/api/account/" + accountId)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Result<com.ledger.app.modules.account.dto.response.AccountResponse> account1Result =
+                objectMapper.readValue(account1Response, objectMapper.getTypeFactory()
+                        .constructParametricType(Result.class, com.ledger.app.modules.account.dto.response.AccountResponse.class));
+        BigDecimal initialBalance1 = account1Result.getData().getBalance();
+
+        String account2Response = mockMvc.perform(get("/api/account/" + accountId2)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Result<com.ledger.app.modules.account.dto.response.AccountResponse> account2Result =
+                objectMapper.readValue(account2Response, objectMapper.getTypeFactory()
+                        .constructParametricType(Result.class, com.ledger.app.modules.account.dto.response.AccountResponse.class));
+        BigDecimal initialBalance2 = account2Result.getData().getBalance();
+
+        // 创建转账交易
+        TransferRequest transferRequest = TransferRequest.builder()
+                .bookId(bookId)
+                .fromAccountId(accountId)
+                .toAccountId(accountId2)
+                .amount(new BigDecimal("500.00"))
+                .title("银行卡转入微信")
+                .description("生活费转账")
+                .transactionDate(LocalDate.now())
+                .build();
+
+        String transferResponse = mockMvc.perform(post("/api/transaction/transfer")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transferRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Result<Long> transferResult = objectMapper.readValue(transferResponse,
+                objectMapper.getTypeFactory().constructParametricType(Result.class, Long.class));
+        Long transferId = transferResult.getData();
+        assert transferId != null && transferId > 0;
+
+        // 验证转出账户余额减少
+        String updatedAccount1Response = mockMvc.perform(get("/api/account/" + accountId)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Result<com.ledger.app.modules.account.dto.response.AccountResponse> updatedAccount1Result =
+                objectMapper.readValue(updatedAccount1Response, objectMapper.getTypeFactory()
+                        .constructParametricType(Result.class, com.ledger.app.modules.account.dto.response.AccountResponse.class));
+        BigDecimal updatedBalance1 = updatedAccount1Result.getData().getBalance();
+
+        // 验证转入账户余额增加
+        String updatedAccount2Response = mockMvc.perform(get("/api/account/" + accountId2)
+                        .header("Authorization", "Bearer " + authToken))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        Result<com.ledger.app.modules.account.dto.response.AccountResponse> updatedAccount2Result =
+                objectMapper.readValue(updatedAccount2Response, objectMapper.getTypeFactory()
+                        .constructParametricType(Result.class, com.ledger.app.modules.account.dto.response.AccountResponse.class));
+        BigDecimal updatedBalance2 = updatedAccount2Result.getData().getBalance();
+
+        // 验证原子性：转出账户减少 500，转入账户增加 500
+        assert initialBalance1.subtract(updatedBalance1).compareTo(new BigDecimal("500.00")) == 0;
+        assert updatedBalance2.subtract(initialBalance2).compareTo(new BigDecimal("500.00")) == 0;
+    }
+
+    @Test
+    void testCreateTransfer_SameAccount_ShouldFail() throws Exception {
+        // 尝试转账到同一账户 - 应该失败
+        TransferRequest transferRequest = TransferRequest.builder()
+                .bookId(bookId)
+                .fromAccountId(accountId)
+                .toAccountId(accountId)
+                .amount(new BigDecimal("100.00"))
+                .title("同一账户转账")
+                .transactionDate(LocalDate.now())
+                .build();
+
+        mockMvc.perform(post("/api/transaction/transfer")
+                        .header("Authorization", "Bearer " + authToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(transferRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(500));
     }
 }
